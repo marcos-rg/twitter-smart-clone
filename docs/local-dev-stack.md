@@ -130,11 +130,11 @@ beforehand) on Docker 29.5.3 / Compose v5.1.4:
   secret values present (only local dev-only defaults).
 - `docker compose -f docker-compose.yml -f docker-compose.dev.yml config`
   — succeeds (exit 0).
-- `make up` — builds `backend`/`frontend` images and starts all 6 services;
+- `make up` — builds `backend`/`frontend` images and starts all 6 long-running services (plus the one-shot `minio-init` job);
   `postgres`, `redis`, `minio`, `backend`, and `frontend` report `healthy`
   within 30 seconds on a truly clean checkout (fresh volumes, freshly
   built images, verified via `docker volume rm` + `docker rmi` beforehand);
-  `minio-init` exits 0 after creating the bucket.
+  `worker` remains running (no healthcheck) and `minio-init` exits 0 after creating the bucket.
 - API health: `curl http://localhost:8000/api/v1/health` →
   `{"status":"ok"}`.
 - Frontend: `curl -o /dev/null -w '%{http_code}' http://localhost:5173/` →
