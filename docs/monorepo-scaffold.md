@@ -21,8 +21,10 @@ twitter-smart-clone/
 - **Package layout:** `app/{core,models,schemas,repositories,services,routers,ws,ai,workers}`,
   matching the module boundaries in [specification.md §14](../specification/specification.md).
   Only `app/main.py` (the FastAPI app factory with a `/api/v1/health` endpoint)
-  has functional code today; the other packages are empty placeholders for
-  later tasks.
+  had functional code at this task's scaffold stage; the other packages were
+  empty placeholders for later tasks. `app/core`, `app/routers`, and
+  `app/workers` gained real content in `TSC-CORE-001` — see
+  [backend-platform.md](./backend-platform.md).
 - **Dependency management:** `backend/pyproject.toml` + `backend/uv.lock`.
   Runtime deps: `fastapi`, `sqlmodel`, `uvicorn[standard]`. Dev deps: `ruff`,
   `black`, `mypy` (strict mode), `pytest`, `pytest-asyncio`, `httpx`, `coverage`.

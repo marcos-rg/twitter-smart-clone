@@ -23,7 +23,8 @@ Once containers report healthy (see `make ps`), the stack is reachable at:
 | Service            | Host URL                          | Container-to-container address |
 | ------------------ | ---------------------------------- | ------------------------------- |
 | Frontend (Vite)    | http://localhost:5173              | `http://frontend:5173`          |
-| Backend API health | http://localhost:8000/api/v1/health | `http://backend:8000`          |
+| Backend liveness   | http://localhost:8000/healthz      | `http://backend:8000`          |
+| Backend readiness  | http://localhost:8000/readyz       | `http://backend:8000`          |
 | PostgreSQL         | `localhost:5432`                    | `postgres:5432`                 |
 | Redis              | `localhost:6379`                    | `redis:6379`                    |
 | MinIO API          | http://localhost:9000              | `http://minio:9000`             |
@@ -89,11 +90,12 @@ contributor and in CI (`TSC-FOUND-003`).
   "stack is healthy" signal — only the long-running `minio` service is.
 - **`backend`** — built from `backend/Dockerfile` (`dev` target); runs
   `uvicorn app.main:app --reload`; healthcheck hits
-  `/api/v1/health`; depends on `postgres`/`redis`/`minio` being healthy.
-- **`worker`** — same image as `backend`, run with a placeholder command.
-  Celery isn't wired up yet — that lands in `TSC-CORE-001` — so this
-  service currently just idles to establish the compose topology described
-  in `specification.md` §12.1 ahead of time.
+  `/healthz`; depends on `postgres`/`redis`/`minio` being healthy. See
+  [backend-platform.md](./backend-platform.md) for the app platform
+  (config, logging, errors, readiness, CORS) added in `TSC-CORE-001`.
+- **`worker`** — same image as `backend`, runs
+  `celery -A app.workers.celery_app worker --loglevel=info` (wired up in
+  `TSC-CORE-001`); shares the Redis broker/result backend with the API.
 - **`frontend`** — built from `frontend/Dockerfile` (`dev` target); runs
   `vite --host 0.0.0.0`; healthcheck does an HTTP GET against `/`.
 
@@ -191,7 +193,7 @@ logic to debug.
 | `backend-quality` | `ruff check .`, `black --check .`, `mypy app tests`, then `coverage run -m pytest && coverage report` (enforces the ratcheting `fail_under` gate in `backend/pyproject.toml`). | `make lint` (ruff/black/mypy lines) and `make test` (backend line) |
 | `frontend-quality` | `eslint .`, `prettier --check .`, `tsc -b --noEmit`, then `npm run test:coverage` (`vitest run --coverage`, enforces the ratcheting thresholds in `frontend/vite.config.ts`). | `make lint` (eslint/prettier/tsc lines) and `make test` (frontend line) |
 | `secret-scan` | The open-source **gitleaks CLI**, run directly via `docker run` against the full git history — deliberately *not* the `gitleaks/gitleaks-action` wrapper, and with no `GITLEAKS_LICENSE` secret (the CLI needs no license; this repo is public regardless). | `docker run --rm -v "$(pwd):/repo" zricethezav/gitleaks:v8.30.1 detect --source=/repo --no-banner --redact` |
-| `compose-smoke` | `docker compose up -d`, waits for services to be running and (where defined) report `healthy`, then curls the backend health endpoint and the frontend dev server. | `make up`, then `make ps` until healthy, then `curl http://localhost:8000/api/v1/health` and `curl http://localhost:5173/`, then `make down` |
+| `compose-smoke` | `docker compose up -d`, waits for services to be running and (where defined) report `healthy`, then curls the backend liveness/readiness endpoints and the frontend dev server. | `make up`, then `make ps` until healthy, then `curl http://localhost:8000/healthz`, `curl http://localhost:8000/readyz`, and `curl http://localhost:5173/`, then `make down` |
 
 Coverage gates ratchet upward as features land (see the comments next to
 `fail_under` in `backend/pyproject.toml` and `thresholds` in
