@@ -220,7 +220,7 @@ then `up -d`; all six services reported `healthy`/running):
   `access-control-allow-credentials: true` present; the same request with
   `Origin: http://evil.example.com` → no `access-control-allow-origin`
   header.
-- `curl -H "Authorization: Bearer supersecrettoken123" http://localhost:8000/healthz`,
+- `curl -H "Authorization: Bearer <your-token-here>" http://localhost:8000/healthz`,
   then inspected the `backend` container logs — one JSON
   `request_completed` line with `request_id`/`method`/`path`/`status_code`/
   `duration_ms`, and the raw token string does not appear anywhere in the
