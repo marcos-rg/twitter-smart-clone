@@ -79,7 +79,8 @@ contributor and in CI (`TSC-FOUND-003`).
   data in the `postgres_data` named volume.
 - **`redis`** — `redis:7-alpine` with `--appendonly yes`, healthcheck via
   `redis-cli ping`, data in the `redis_data` named volume.
-- **`minio`** — `minio/minio:latest` (S3-compatible object storage),
+- **`minio`** — `minio/minio:${MINIO_IMAGE_TAG}` (default
+  `RELEASE.2026-07-23T15-54-02Z`, S3-compatible object storage),
   healthcheck via `curl .../minio/health/live`, data in the `minio_data`
   named volume.
 - **`minio-init`** — one-shot `minio/mc` job that waits for `minio` to be
