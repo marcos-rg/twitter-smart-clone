@@ -191,7 +191,7 @@ logic to debug.
 | `backend-quality` | `ruff check .`, `black --check .`, `mypy app tests`, then `coverage run -m pytest && coverage report` (enforces the ratcheting `fail_under` gate in `backend/pyproject.toml`). | `make lint` (ruff/black/mypy lines) and `make test` (backend line) |
 | `frontend-quality` | `eslint .`, `prettier --check .`, `tsc -b --noEmit`, then `npm run test:coverage` (`vitest run --coverage`, enforces the ratcheting thresholds in `frontend/vite.config.ts`). | `make lint` (eslint/prettier/tsc lines) and `make test` (frontend line) |
 | `secret-scan` | The open-source **gitleaks CLI**, run directly via `docker run` against the full git history — deliberately *not* the `gitleaks/gitleaks-action` wrapper, and with no `GITLEAKS_LICENSE` secret (the CLI needs no license; this repo is public regardless). | `docker run --rm -v "$(pwd):/repo" zricethezav/gitleaks:v8.30.1 detect --source=/repo --no-banner --redact` |
-| `compose-smoke` | `docker compose up -d`, waits for every service to report `healthy` via `docker compose ps --format '{{.Health}}'`, then curls the backend health endpoint and the frontend dev server. | `make up`, then `make ps` until healthy, then `curl http://localhost:8000/api/v1/health` and `curl http://localhost:5173/`, then `make down` |
+| `compose-smoke` | `docker compose up -d`, waits for services to be running and (where defined) report `healthy`, then curls the backend health endpoint and the frontend dev server. | `make up`, then `make ps` until healthy, then `curl http://localhost:8000/api/v1/health` and `curl http://localhost:5173/`, then `make down` |
 
 Coverage gates ratchet upward as features land (see the comments next to
 `fail_under` in `backend/pyproject.toml` and `thresholds` in
