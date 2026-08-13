@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 3 |
+| Done | 4 |
 | In Progress | 0 |
-| To Do | 38 |
+| To Do | 37 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -143,7 +143,7 @@ human-review cadence is:
 <a id="tsc-found-003"></a>
 ### TSC-FOUND-003 - Establish baseline CI quality gates
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Add pull-request CI that runs the same containerized checks used
   locally. Establish the pipeline early so each later feature extends a working gate.
 - **Dependencies:** [TSC-FOUND-001](#tsc-found-001),
@@ -161,6 +161,14 @@ human-review cadence is:
   - The complete baseline workflow passes on the current revision.
 - **Verification / evidence:** Link a successful workflow run and record the equivalent
   local commands. Deliberately prove one gate fails on a temporary test branch or fixture.
+  - Workflow: `.github/workflows/ci.yml` (jobs: `build-images`, `backend-quality`,
+    `frontend-quality`, `secret-scan`, `compose-smoke`). Local equivalents, full local
+    command output, and the deliberate-failure proofs (a fixture secret detected by
+    gitleaks; an unformatted line rejected by `black --check`) are recorded in
+    `docs/local-dev-stack.md` under "CI (`TSC-FOUND-003`)".
+  - PR/workflow run link: opened from branch
+    `11-tsc-found-003---establish-baseline-ci-quality-gates`; add the PR URL and the
+    first green Actions run URL here once available from GitHub.
 - **Human review gate:** Human reviews workflow permissions and required branch checks.
 
 <a id="tsc-ux-001"></a>

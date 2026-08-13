@@ -171,5 +171,86 @@ beforehand) on Docker 29.5.3 / Compose v5.1.4:
 - `docker-compose.yml` alone (without the `dev` overlay) is also a valid,
   fully working way to start the stack — it just won't hot-reload on host
   edits, since no source directories are bind-mounted.
-- CI workflows that exercise this stack (integration smoke tests, image
-  builds) are added by `TSC-FOUND-003`, not here.
+- The `MINIO_IMAGE_TAG` / `minio/mc` release tags pinned when this stack
+  was first built didn't actually exist on Docker Hub (they were dated
+  further in the future than any real MinIO release at the time);
+  `TSC-FOUND-003` repinned both to the latest real releases so `make up`
+  and CI can pull them. Verify any future re-pin resolves with
+  `docker pull <image>:<tag>` before merging.
+
+## CI (`TSC-FOUND-003`)
+
+`.github/workflows/ci.yml` runs on every pull request and push to `main`.
+Every job runs the *same* containerized commands documented above, so a
+green CI run is reproducible locally — there is no separate "CI-only"
+logic to debug.
+
+| CI job | What it runs | Local equivalent |
+| --- | --- | --- |
+| `build-images` | Builds the `backend` and `frontend` `dev`-target images from their Dockerfiles (validates both images still build). | `make build` |
+| `backend-quality` | `ruff check .`, `black --check .`, `mypy app tests`, then `coverage run -m pytest && coverage report` (enforces the ratcheting `fail_under` gate in `backend/pyproject.toml`). | `make lint` (ruff/black/mypy lines) and `make test` (backend line) |
+| `frontend-quality` | `eslint .`, `prettier --check .`, `tsc -b --noEmit`, then `npm run test:coverage` (`vitest run --coverage`, enforces the ratcheting thresholds in `frontend/vite.config.ts`). | `make lint` (eslint/prettier/tsc lines) and `make test` (frontend line) |
+| `secret-scan` | The open-source **gitleaks CLI**, run directly via `docker run` against the full git history — deliberately *not* the `gitleaks/gitleaks-action` wrapper, and with no `GITLEAKS_LICENSE` secret (the CLI needs no license; this repo is public regardless). | `docker run --rm -v "$(pwd):/repo" zricethezav/gitleaks:v8.30.1 detect --source=/repo --no-banner --redact` |
+| `compose-smoke` | `docker compose up -d`, waits for every service to report `healthy` via `docker compose ps --format '{{.Health}}'`, then curls the backend health endpoint and the frontend dev server. | `make up`, then `make ps` until healthy, then `curl http://localhost:8000/api/v1/health` and `curl http://localhost:5173/`, then `make down` |
+
+Coverage gates ratchet upward as features land (see the comments next to
+`fail_under` in `backend/pyproject.toml` and `thresholds` in
+`frontend/vite.config.ts`) so the final 80%/70% line-coverage gates in
+`TSC-QA-001` are not a last-minute cliff.
+
+Design choices, called out for the human review gate on this task:
+
+- **Caching**: images are built via `docker/build-push-action` with the
+  `type=gha` cache backend (`cache-from`/`cache-to`, scoped per image), so
+  the `uv sync` / `npm ci` dependency-install layers are reused across
+  runs without needing a registry.
+- **Version pinning**: every action is pinned to an exact release tag
+  (`actions/checkout@v7.0.1`, `docker/setup-buildx-action@v4.2.0`,
+  `docker/build-push-action@v7.3.0`), and the gitleaks image is pinned to
+  `zricethezav/gitleaks:v8.30.1` — none use a floating major-version tag,
+  `latest`, or a branch ref.
+- **Least privilege**: the workflow sets `permissions: contents: read` at
+  the top level (no job pushes images, writes PR comments, or otherwise
+  needs write access).
+- **No real LLM calls**: nothing in the codebase integrates a real LLM
+  provider yet (that lands with the `TSC-CORE-*`/`TSC-AI-*` tasks); when it
+  does, those tasks must add offline fixtures/mocks so this workflow keeps
+  running without network calls to a real provider.
+
+### Verification evidence
+
+All of the following were run locally against this task's branch before
+opening it for human review (see the `[TSC-FOUND-003]` commits for exact
+diffs):
+
+- `make build` — both dev images build successfully.
+- `make lint` — ruff/black/mypy (backend) and eslint/prettier/tsc
+  (frontend) all pass.
+- `make test` — backend `coverage run -m pytest && coverage report`
+  passes 1 test at 100% coverage (gate: `fail_under = 60`); frontend
+  `npm run test:coverage` passes 1 test at 100% coverage (gate: 50% on
+  all four vitest coverage metrics).
+- `make up` then polling `docker compose ps --format '{{.Health}}'` until
+  every entry reads `healthy`, then `curl http://localhost:8000/api/v1/health`
+  → `{"status":"ok"}` and `curl -o /dev/null -w '%{http_code}' http://localhost:5173/`
+  → `200`; `make down` afterward — this is exactly the `compose-smoke`
+  job's logic.
+- `docker run --rm -v "$(pwd):/repo" zricethezav/gitleaks:v8.30.1 detect
+  --source=/repo --no-banner --redact` — `no leaks found` on the real
+  repository.
+- **Deliberate failure proof (gitleaks)**: ran the same gitleaks command
+  against a scratch directory seeded with fixture lines
+  (`AWS_SECRET_ACCESS_KEY=AKIA...`, a fake AWS secret access key) —
+  gitleaks reported `leaks found: 1` and exited `1`. The fixture was never
+  committed to this repository; it lived only in a throwaway `/tmp`
+  directory that was deleted immediately after the check.
+- **Deliberate failure proof (lint gate)**: temporarily appended an
+  unformatted line (`x=1`) to `backend/app/main.py` and ran
+  `docker compose ... run --rm backend uv run black --check .` — it
+  failed with `would reformat /app/app/main.py` and exit code `1`. The
+  change was reverted with `git checkout -- backend/app/main.py` (never
+  committed) before continuing.
+- A pull request was opened from this branch so the workflow above runs
+  on GitHub itself; the PR/run link is recorded in
+  `specification/tasks.md`'s verification notes for `TSC-FOUND-003` once
+  available.
