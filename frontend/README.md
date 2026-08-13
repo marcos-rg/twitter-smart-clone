@@ -30,12 +30,17 @@ for the full architecture and [docs/](../docs) for living documentation.
 ```
 src/
 ├── api/          # API client, TanStack Query hooks
-├── components/   # Shared UI components
+├── components/   # Design system (ui/, tweet/, layout/) — see docs/design-system.md
 ├── features/     # feed, tweet, profile, notifications, search, ai
 ├── stores/       # Zustand stores
-├── routes/       # React Router routes
+├── routes/       # React Router routes (Home, Lab — the /lab component showcase)
 ├── lib/          # ws client, utils
 └── main.tsx
-tests/            # Vitest + React Testing Library
-e2e/              # Playwright
+tests/            # Vitest + React Testing Library (+ jest-axe a11y checks)
+e2e/              # Playwright (includes responsive lab checks at 3 breakpoints)
 ```
+
+Styling uses Tailwind CSS v4 with design tokens defined in
+`src/index.css` (`@theme`). Browse the component library at `/lab` when
+running `npm run dev`; see
+[docs/design-system.md](../docs/design-system.md) for usage documentation.
