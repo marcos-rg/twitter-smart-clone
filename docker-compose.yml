@@ -70,7 +70,7 @@ services:
   # One-shot job: creates the media bucket on a fresh volume, then exits.
   # Not part of the "stack is up" health signal — only `minio` itself is.
   minio-init:
-    image: minio/mc:latest
+    image: minio/mc:RELEASE.2026-07-21T05-28-08Z
     depends_on:
       minio:
         condition: service_healthy
