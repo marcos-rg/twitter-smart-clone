@@ -55,6 +55,10 @@ forgotten. Do not start work without this list.
 - Stay strictly within the task's scope. Do not implement future tasks early. If
   you discover the task requires a scope or specification change, update
   `tasks.md` / the relevant docs in the same change and say so explicitly.
+- Commit incrementally as you go: after each logically complete, working unit
+  (e.g., one model, one endpoint, one migration, one component), make a small
+  commit referencing the task ID, e.g. `[TSC-AUTH-001] Add User model`. Never
+  bundle the whole task into a single commit.
 
 ### 6. QA verification (mandatory)
 
@@ -74,28 +78,36 @@ forgotten. Do not start work without this list.
 
 ### 8. Update task status
 
-- If the task has a **Human review gate**: set status considering the gate. Leave
-  the task `In Progress`, and clearly report that implementation and verification
-  are complete but the human gate is pending approval. Never mark such a task
-  `Done` yourself.
-- If there is no human gate (or the user has explicitly stated the gate is
-  approved): run `python3 scripts/tasks.py set-status <ID> Done`.
+- If the task has a **Human review gate**: leave the task `In Progress`, commit
+  the implementation and docs (per step 5), and explicitly ask the human to
+  review the completed work. Never mark such a task `Done` yourself, and do not
+  proceed to step 9 until the human confirms approval (this may happen in a
+  later invocation).
+- Once the human confirms approval (or immediately if there is no human review
+  gate): run `python3 scripts/tasks.py set-status <ID> Done`.
 - Run `python3 scripts/tasks.py validate` and fix anything it reports.
 
 ### 9. Commit and finish
 
-- Commit all changes with a message referencing the task ID, e.g.
-  `[TSC-AUTH-001] Implement backend authentication`, with verification evidence
-  summarized in the body.
+- Commit the status change (and any validate fixes) on its own as a small
+  task-update commit, e.g. `[TSC-AUTH-001] Mark task done after review`. Do not
+  fold this into an earlier implementation commit, and do not create one giant
+  commit covering the whole task.
 - Finish with a short report: task ID, what was done, verification evidence,
-  status set, and which task is eligible next (or which human gate is pending).
+  the incremental commits made, status set, and which task is eligible next (or
+  which human gate is pending).
 
 ## Hard rules
 
 - One task per invocation. Never start a second task.
 - Never mark a task `Done` without running its verification and confirming every
   acceptance criterion.
-- Never mark a task with a pending human review gate as `Done`.
+- Never mark a task with a pending human review gate as `Done`; only do so after
+  the human explicitly confirms approval.
+- Commit incrementally as logical units of work complete. Never bundle an entire
+  task's implementation into one huge commit.
+- Commit the `Done` status change separately, as its own small task-update
+  commit, after (and only after) any required human review is approved.
 - Never change or reuse task IDs; new work gets a new ID.
 - Keep `tasks.md` status values and the progress counts table consistent at all
   times. Always change statuses via `python3 scripts/tasks.py set-status` instead
