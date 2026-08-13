@@ -45,3 +45,11 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["app"]
+
+# Ratcheting coverage gate (TSC-FOUND-003): raised as features land so the
+# final 80% line-coverage gate in TSC-QA-001 is not a last-minute cliff.
+# CI fails the backend job if coverage drops below this threshold; bump it
+# upward whenever a feature task lands with well-tested code.
+[tool.coverage.report]
+fail_under = 60
+show_missing = true

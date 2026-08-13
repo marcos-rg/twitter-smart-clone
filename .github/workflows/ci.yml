@@ -1,0 +1,233 @@
+name: CI
+
+# Baseline CI quality gates (TSC-FOUND-003). Every job runs the *same*
+# containerized commands documented in docs/local-dev-stack.md /
+# `make lint` / `make test`, so a green run here is reproducible on any
+# contributor's machine with `make lint && make test`.
+#
+# No job calls a real LLM provider: the codebase doesn't integrate one yet
+# (LangChain/OpenAI wiring lands with the TSC-CORE-*/TSC-AI-* tasks), and
+# when it does, those tasks must add API-key-shaped fixtures/mocks here so
+# this workflow keeps running fully offline.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least-privilege default: nothing in this workflow pushes images, writes
+# PR comments, or otherwise needs anything beyond reading the checkout.
+permissions:
+  contents: read
+
+env:
+  COMPOSE_FILES: -f docker-compose.yml -f docker-compose.dev.yml
+
+jobs:
+  build-images:
+    name: Build backend/frontend images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.2.0
+
+      - name: Build backend dev image
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: ./backend
+          target: dev
+          tags: twitter-smart-clone/backend:dev
+          load: true
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Build frontend dev image
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: ./frontend
+          target: dev
+          tags: twitter-smart-clone/frontend:dev
+          load: true
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  backend-quality:
+    name: Backend format / lint / type / tests
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.2.0
+
+      # Re-materializes the image from the build-images job's cache (fast:
+      # GitHub Actions runners don't share a Docker daemon across jobs, so
+      # the layers, not the image itself, are what's reused here).
+      - name: Build backend dev image
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: ./backend
+          target: dev
+          tags: twitter-smart-clone/backend:dev
+          load: true
+          cache-from: type=gha,scope=backend
+
+      # Local equivalent: `make lint` (ruff/black/mypy lines) and
+      # `make test` (coverage lines) — see docs/local-dev-stack.md.
+      - name: Ruff (lint)
+        run: docker compose ${{ env.COMPOSE_FILES }} run --rm backend uv run ruff check .
+
+      - name: Black (format check)
+        run: docker compose ${{ env.COMPOSE_FILES }} run --rm backend uv run black --check .
+
+      - name: Mypy (type check)
+        run: docker compose ${{ env.COMPOSE_FILES }} run --rm backend uv run mypy app tests
+
+      - name: Pytest with coverage gate
+        run: docker compose ${{ env.COMPOSE_FILES }} run --rm backend sh -c "uv run coverage run -m pytest && uv run coverage report"
+
+      - name: Tear down containers
+        if: always()
+        run: docker compose ${{ env.COMPOSE_FILES }} down -v
+
+  frontend-quality:
+    name: Frontend format / lint / type / tests
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.2.0
+
+      - name: Build frontend dev image
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: ./frontend
+          target: dev
+          tags: twitter-smart-clone/frontend:dev
+          load: true
+          cache-from: type=gha,scope=frontend
+
+      # Local equivalent: `make lint` (eslint/prettier/tsc lines) and
+      # `make test` (vitest coverage line) — see docs/local-dev-stack.md.
+      - name: ESLint
+        run: docker compose ${{ env.COMPOSE_FILES }} run --rm frontend npm run lint
+
+      - name: Prettier (format check)
+        run: docker compose ${{ env.COMPOSE_FILES }} run --rm frontend npm run format:check
+
+      - name: Typecheck
+        run: docker compose ${{ env.COMPOSE_FILES }} run --rm frontend npm run typecheck
+
+      - name: Vitest with coverage gate
+        run: docker compose ${{ env.COMPOSE_FILES }} run --rm frontend npm run test:coverage
+
+      - name: Tear down containers
+        if: always()
+        run: docker compose ${{ env.COMPOSE_FILES }} down -v
+
+  secret-scan:
+    name: Secret scan (gitleaks CLI)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # Full history so gitleaks can scan every commit, not just the
+      # working tree of the current checkout.
+      - name: Checkout (full history)
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      # Deliberately the plain open-source gitleaks CLI run directly via
+      # `docker run` — no gitleaks-action wrapper and no GITLEAKS_LICENSE
+      # secret (this repo is public and the CLI needs no license either
+      # way). Local equivalent:
+      #   docker run --rm -v "$(pwd):/repo" zricethezav/gitleaks:v8.30.1 \
+      #     detect --source=/repo --no-banner --redact
+      - name: Run gitleaks
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/repo" \
+            zricethezav/gitleaks:v8.30.1 \
+            detect --source=/repo --no-banner --redact
+
+  compose-smoke:
+    name: Compose integration smoke test
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.2.0
+
+      - name: Build backend dev image
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: ./backend
+          target: dev
+          tags: twitter-smart-clone/backend:dev
+          load: true
+          cache-from: type=gha,scope=backend
+
+      - name: Build frontend dev image
+        uses: docker/build-push-action@v7.3.0
+        with:
+          context: ./frontend
+          target: dev
+          tags: twitter-smart-clone/frontend:dev
+          load: true
+          cache-from: type=gha,scope=frontend
+
+      # Local equivalent: `make up`, wait for `make ps` to report every
+      # service healthy, then curl the endpoints below; `make down` after.
+      - name: Start the full stack
+        run: docker compose ${{ env.COMPOSE_FILES }} up -d --no-build
+
+      - name: Wait for services to report healthy
+        run: |
+          for i in $(seq 1 30); do
+            statuses=$(docker compose ${{ env.COMPOSE_FILES }} ps --format '{{.Service}} {{.State}} {{.Health}}')
+            echo "$statuses"
+            if echo "$statuses" | awk 'BEGIN { seen=0 } { seen=1; if ($2 != "running") exit 1; if ($3 != "" && $3 != "healthy") exit 1 } END { if (!seen) exit 1 }'; then
+              echo "All services running/healthy."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Timed out waiting for services to become healthy." >&2
+          docker compose ${{ env.COMPOSE_FILES }} ps
+          docker compose ${{ env.COMPOSE_FILES }} logs
+          exit 1
+
+      - name: Smoke test backend health endpoint
+        run: curl --fail --silent --show-error http://localhost:8000/api/v1/health
+
+      - name: Smoke test frontend dev server
+        run: curl --fail --silent --show-error --output /dev/null http://localhost:5173/
+
+      - name: Tear down containers
+        if: always()
+        run: docker compose ${{ env.COMPOSE_FILES }} down -v
