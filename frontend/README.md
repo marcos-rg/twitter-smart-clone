@@ -12,7 +12,7 @@ for the full architecture and [docs/](../docs) for living documentation.
 
 | Command                | Description                                    |
 | ---------------------- | ---------------------------------------------- |
-| `npm install`          | Install dependencies from `package-lock.json`. |
+| `npm ci`               | Install dependencies from `package-lock.json`. |
 | `npm run dev`          | Start the Vite dev server with HMR.            |
 | `npm run build`        | Type-check and build the production bundle.    |
 | `npm run preview`      | Serve the production build locally.            |
