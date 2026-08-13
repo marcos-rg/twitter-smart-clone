@@ -73,6 +73,12 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["app"]
+# SQLAlchemy's async engine bridges sync DBAPI calls into async via
+# greenlet (`greenlet_spawn`); without this, `sys.settrace`-based coverage
+# silently stops recording every statement *after* an `await session.*`
+# call within the same coroutine (a documented coverage.py limitation),
+# which under-reports real coverage on most DB-touching code paths.
+concurrency = ["greenlet", "thread"]
 
 # Ratcheting coverage gate (TSC-FOUND-003): raised as features land so the
 # final 80% line-coverage gate in TSC-QA-001 is not a last-minute cliff.
