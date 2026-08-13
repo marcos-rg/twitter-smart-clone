@@ -24,7 +24,10 @@ export interface TabsProps {
 export function Tabs({ tabs, defaultTab, 'aria-label': ariaLabel }: TabsProps) {
   const baseId = useId()
   const enabledTabs = tabs.filter((t) => !t.disabled)
-  const [activeId, setActiveId] = useState(defaultTab ?? enabledTabs[0]?.id ?? tabs[0]?.id)
+  const [activeId, setActiveId] = useState(() => {
+    if (defaultTab && tabs.some((t) => t.id === defaultTab && !t.disabled)) return defaultTab
+    return enabledTabs[0]?.id ?? tabs[0]?.id ?? ''
+  })
   const tabRefs = useRef(new Map<string, HTMLButtonElement>())
 
   const setTabRef = useCallback(
