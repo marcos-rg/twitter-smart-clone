@@ -15,7 +15,7 @@ export default defineConfig({
       reporter: ['text', 'lcov'],
       // Ratcheting coverage gate (TSC-FOUND-003): raised as features land so
       // the final 70% line-coverage gate in TSC-QA-001 is not a last-minute
-      // cliff. CI fails `npm run test -- --coverage` if coverage drops below
+      // cliff. CI fails `npm run test:coverage` if coverage drops below
       // these thresholds; bump them upward whenever a feature task lands
       // with well-tested code.
       thresholds: {
