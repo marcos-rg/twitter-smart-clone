@@ -1,14 +1,26 @@
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { AppShell } from './components/layout/AppShell'
+import { ToastProvider } from './components/ui'
+import { Home } from './routes/Home'
+import { Lab } from './routes/Lab'
+
 /**
- * Placeholder root component. Feature routes/components are added by later
- * tasks; this only establishes the minimal executable entry point for the
- * scaffolded project.
+ * Root component: router + global providers + responsive application shell.
+ * `/lab` is the in-app component interaction lab (TSC-UX-001); feature routes
+ * are added by later tasks.
  */
 function App() {
   return (
-    <main>
-      <h1>Twitter Smart Clone</h1>
-      <p>Frontend scaffold ready.</p>
-    </main>
+    <ToastProvider>
+      <BrowserRouter>
+        <AppShell>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/lab" element={<Lab />} />
+          </Routes>
+        </AppShell>
+      </BrowserRouter>
+    </ToastProvider>
   )
 }
 
