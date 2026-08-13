@@ -46,8 +46,8 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 4 |
-| In Progress | 1 |
+| Done | 5 |
+| In Progress | 0 |
 | To Do | 36 |
 
 The counts above reflect the repository at the time this plan was created: requirements
@@ -174,7 +174,7 @@ human-review cadence is:
 <a id="tsc-ux-001"></a>
 ### TSC-UX-001 - Create the design system and component interaction lab
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Define reusable visual tokens, responsive layouts, interaction
   patterns, and an isolated component showcase before feature pages multiply. Use an
   in-app development route or the already-approved component tool; do not add a second
