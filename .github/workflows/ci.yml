@@ -222,8 +222,11 @@ jobs:
           docker compose ${{ env.COMPOSE_FILES }} logs
           exit 1
 
-      - name: Smoke test backend health endpoint
-        run: curl --fail --silent --show-error http://localhost:8000/api/v1/health
+      - name: Smoke test backend liveness endpoint
+        run: curl --fail --silent --show-error http://localhost:8000/healthz
+
+      - name: Smoke test backend readiness endpoint
+        run: curl --fail --silent --show-error http://localhost:8000/readyz
 
       - name: Smoke test frontend dev server
         run: curl --fail --silent --show-error --output /dev/null http://localhost:5173/
