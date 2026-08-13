@@ -43,29 +43,21 @@ for (const bp of breakpoints) {
   })
 }
 
-test('app shell renders at the three breakpoints without horizontal overflow', async ({
-  page,
-}) => {
+test('app shell renders at the three breakpoints without horizontal overflow', async ({ page }) => {
   for (const bp of breakpoints) {
     await page.setViewportSize({ width: bp.width, height: bp.height })
     await page.goto('/')
-    await expect(
-      page.getByRole('heading', { name: /twitter smart clone/i }),
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: /twitter smart clone/i })).toBeVisible()
     await expectNoHorizontalOverflow(page)
   }
 })
 
-test('motion is disabled when the user prefers reduced motion', async ({
-  page,
-}) => {
+test('motion is disabled when the user prefers reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/lab')
 
   const button = page.getByRole('button', { name: 'Primary' })
-  const transitionDuration = await button.evaluate(
-    (el) => getComputedStyle(el).transitionDuration,
-  )
+  const transitionDuration = await button.evaluate((el) => getComputedStyle(el).transitionDuration)
   // The global reduced-motion rule clamps all transitions to 0.01ms.
   expect(parseFloat(transitionDuration)).toBeLessThan(0.001)
 })
