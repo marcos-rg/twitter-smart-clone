@@ -21,7 +21,7 @@ for the full architecture and [docs/](../docs) for living documentation.
 | `npm run format`       | Format the codebase with Prettier.             |
 | `npm run format:check` | Check formatting without writing changes.      |
 | `npm run test`         | Run Vitest unit/component tests once.          |
-| `npm run test:coverage`| Run tests once and enforce coverage thresholds (`vite.config.ts`). |
+| `npm run test:coverage` | Run tests once and enforce coverage thresholds (`vite.config.ts`). |
 | `npm run test:watch`   | Run Vitest in watch mode.                      |
 | `npm run e2e`          | Run Playwright end-to-end tests.               |
 
