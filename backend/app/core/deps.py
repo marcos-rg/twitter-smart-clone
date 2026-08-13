@@ -12,6 +12,7 @@ from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from redis.asyncio import Redis
 from sqlmodel.ext.asyncio.session import AsyncSession
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import Settings
 from app.core.errors import AppError
@@ -51,16 +52,26 @@ def get_resources(request: Request) -> AppResources:
 async def get_db_session(
     resources: AppResources = Depends(get_resources),
 ) -> AsyncIterator[AsyncSession]:
-    """A request-scoped `AsyncSession`, committed on success and rolled back
-    on any exception so a failed request never leaves a partial write.
+    """A request-scoped `AsyncSession`.
+
+    Domain errors (`AppError`/`HTTPException` — expected `4xx` control flow,
+    e.g. "reuse detected, revoke the family, then return 401") still commit:
+    those code paths deliberately mutate state (like revoking tokens) before
+    raising, and that mutation must survive the error response. Only a truly
+    unexpected exception (an actual bug, surfaced as a `500`) rolls back, so
+    a half-finished write from a genuine crash is never persisted.
     """
     async with resources.db_sessionmaker() as session:
         try:
             yield session
+        except (AppError, StarletteHTTPException):
             await session.commit()
+            raise
         except Exception:
             await session.rollback()
             raise
+        else:
+            await session.commit()
 
 
 def get_redis(resources: AppResources = Depends(get_resources)) -> Redis:
