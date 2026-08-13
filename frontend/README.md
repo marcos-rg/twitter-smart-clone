@@ -10,20 +10,20 @@ for the full architecture and [docs/](../docs) for living documentation.
 
 ## Commands
 
-| Command                | Description                                    |
-| ---------------------- | ---------------------------------------------- |
-| `npm ci`               | Install dependencies from `package-lock.json`. |
-| `npm run dev`          | Start the Vite dev server with HMR.            |
-| `npm run build`        | Type-check and build the production bundle.    |
-| `npm run preview`      | Serve the production build locally.            |
-| `npm run typecheck`    | Run `tsc` in strict mode with no emit.         |
-| `npm run lint`         | Run ESLint.                                    |
-| `npm run format`       | Format the codebase with Prettier.             |
-| `npm run format:check` | Check formatting without writing changes.      |
-| `npm run test`         | Run Vitest unit/component tests once.          |
+| Command                 | Description                                                        |
+| ----------------------- | ------------------------------------------------------------------ |
+| `npm ci`                | Install dependencies from `package-lock.json`.                     |
+| `npm run dev`           | Start the Vite dev server with HMR.                                |
+| `npm run build`         | Type-check and build the production bundle.                        |
+| `npm run preview`       | Serve the production build locally.                                |
+| `npm run typecheck`     | Run `tsc` in strict mode with no emit.                             |
+| `npm run lint`          | Run ESLint.                                                        |
+| `npm run format`        | Format the codebase with Prettier.                                 |
+| `npm run format:check`  | Check formatting without writing changes.                          |
+| `npm run test`          | Run Vitest unit/component tests once.                              |
 | `npm run test:coverage` | Run tests once and enforce coverage thresholds (`vite.config.ts`). |
-| `npm run test:watch`   | Run Vitest in watch mode.                      |
-| `npm run e2e`          | Run Playwright end-to-end tests.               |
+| `npm run test:watch`    | Run Vitest in watch mode.                                          |
+| `npm run e2e`           | Run Playwright end-to-end tests.                                   |
 
 ## Project structure
 
