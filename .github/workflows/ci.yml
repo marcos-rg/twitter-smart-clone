@@ -209,10 +209,10 @@ jobs:
       - name: Wait for services to report healthy
         run: |
           for i in $(seq 1 30); do
-            statuses=$(docker compose ${{ env.COMPOSE_FILES }} ps --format '{{.Health}}')
+            statuses=$(docker compose ${{ env.COMPOSE_FILES }} ps --format '{{.Service}} {{.State}} {{.Health}}')
             echo "$statuses"
-            if ! echo "$statuses" | grep -Eqv '^healthy$|^$'; then
-              echo "All services healthy."
+            if echo "$statuses" | awk 'BEGIN { seen=0 } { seen=1; if ($2 != "running") exit 1; if ($3 != "" && $3 != "healthy") exit 1 } END { if (!seen) exit 1 }'; then
+              echo "All services running/healthy."
               exit 0
             fi
             sleep 5
