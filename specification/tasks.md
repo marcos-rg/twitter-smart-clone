@@ -48,7 +48,7 @@ and the relevant living documentation in the same pull request.
 |---|---:|
 | Done | 0 |
 | In Progress | 1 |
-| To Do | 38 |
+| To Do | 40 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -150,7 +150,9 @@ human-review cadence is:
   [TSC-FOUND-002](#tsc-found-002).
 - **Expected outputs / artifacts:** GitHub Actions workflows for backend and frontend
   format/lint/type checks, tests, secret scanning, Compose integration smoke tests, and
-  backend/frontend image builds; documented local equivalents.
+  backend/frontend image builds; coverage reporting with ratcheting thresholds (raised as
+  features land so the final 80%/70% gates in `TSC-QA-001` are not a cliff); documented
+  local equivalents.
 - **AI-verifiable acceptance criteria:**
   - Workflows trigger on pull requests and default-branch pushes with dependency caching.
   - Tests execute inside containers and do not call a real LLM provider.
@@ -200,12 +202,15 @@ human-review cadence is:
 - **Expected outputs / artifacts:** Typed settings; async PostgreSQL, Redis, MinIO, and
   Celery wiring; `/healthz`, `/readyz`, `/api/v1/docs`, and `/api/v1/openapi.json`;
   RFC-9457-inspired error handlers; request-ID middleware; JSON log configuration;
-  security-header middleware; unit/integration tests and architecture docs.
+  security-header middleware; environment-driven CORS configuration for the SPA origin;
+  unit/integration tests and architecture docs.
 - **AI-verifiable acceptance criteria:**
   - Liveness works without dependencies; readiness fails when a required dependency is
     unavailable and succeeds when all required dependencies are ready.
   - Every tested error uses the documented envelope and matching `X-Request-ID`.
   - Logs include request ID, method, path, status, and latency without secrets or tokens.
+  - Cross-origin requests from the configured frontend origin succeed (including
+    credentials for the refresh cookie) while unlisted origins are rejected.
   - Startup and shutdown cleanly acquire/release async resources.
   - Backend lint, type checks, platform tests, and OpenAPI generation pass.
 - **Verification / evidence:** Record targeted pytest, lint, type-check, health/readiness,
@@ -378,28 +383,55 @@ human-review cadence is:
 - **Human review gate:** Human validates search relevance using the seeded dataset.
 
 <a id="tsc-notif-001"></a>
-### TSC-NOTIF-001 - Build notification persistence and realtime infrastructure
+### TSC-NOTIF-001 - Build notification persistence and delivery APIs
 
 - **Status:** To Do
-- **Objective / scope:** Build the reusable notification service before social actions
-  depend on it: transactional persistence, list/read APIs, post-commit Redis publication,
-  authenticated WebSockets, connection lifecycle, heartbeat, and multi-worker routing.
-  Trigger wiring is completed by follow, reply, and like tasks.
+- **Objective / scope:** Build the reusable notification resource before social actions
+  depend on it: transactional persistence, list/read APIs, and post-commit Redis
+  publication of the event envelope. Trigger wiring is completed by follow, reply, and
+  like tasks; live WebSocket delivery is completed by `TSC-NOTIF-004`.
 - **Dependencies:** [TSC-USER-001](#tsc-user-001),
   [TSC-CORE-001](#tsc-core-001).
 - **Expected outputs / artifacts:** Notification repository/service/routes; cursor pagination;
-  mark-selected/mark-all-read behavior; Redis publisher/subscriber bridge; WebSocket
-  manager; auth, heartbeat, reconnect contract, and event envelope; unit/integration/WS
-  tests and protocol documentation.
+  mark-selected/mark-all-read behavior; post-commit Redis publisher; documented event
+  envelope with stable notification IDs; unit/integration tests and contract documentation.
 - **AI-verifiable acceptance criteria:**
   - Notification rows commit before publication and failed transactions publish nothing.
   - A recipient can list/read only their own notifications; unread state is accurate.
+  - Published events follow the documented envelope and carry stable notification IDs
+    that clients can use to de-duplicate.
+  - List pagination is cursor-stable and malformed cursors return standard errors.
+  - Mark-selected and mark-all-read update unread state exactly once and are idempotent.
+- **Verification / evidence:** Record API, transaction, pagination, authorization, and
+  Redis-publish test output.
+- **Human review gate:** Human reviews the notification contract and event envelope.
+
+<a id="tsc-notif-004"></a>
+### TSC-NOTIF-004 - Build authenticated realtime WebSocket infrastructure
+
+- **Status:** To Do
+- **Objective / scope:** Deliver the realtime transport that pushes persisted notification
+  events to online clients: authenticated WebSocket endpoint, connection lifecycle,
+  heartbeat, Redis subscriber bridge, and multi-worker routing. The notification resource
+  itself is owned by `TSC-NOTIF-001`.
+- **Dependencies:** [TSC-NOTIF-001](#tsc-notif-001),
+  [TSC-AUTH-001](#tsc-auth-001),
+  [TSC-CORE-001](#tsc-core-001).
+- **Expected outputs / artifacts:** WebSocket endpoint with token validation on connect;
+  in-process connection manager keyed by user with multi-connection support; Redis
+  subscriber bridge; heartbeat/reaping; documented reconnect contract; WS integration
+  tests and protocol documentation.
+- **AI-verifiable acceptance criteria:**
   - Invalid/expired WebSocket credentials are rejected without entering the registry.
   - Multiple tabs receive a notification once per connection; reconnects do not leak
-    subscriptions; clients can de-duplicate using stable notification IDs.
+    subscriptions, sockets, or Redis channels.
   - An event published by one API process reaches a socket held by another process.
-- **Verification / evidence:** Record API, transaction, Redis bridge, multi-process WS,
-  auth-rejection, and heartbeat test output.
+  - Idle or broken sockets are detected by heartbeat and reaped within the documented
+    interval.
+  - A persisted event published while the recipient is connected is delivered within the
+    2-second budget in the test environment.
+- **Verification / evidence:** Record multi-process WS, auth-rejection, heartbeat,
+  reconnect, and latency test output.
 - **Human review gate:** Human reviews the WebSocket auth and reconnect protocol.
 
 <a id="tsc-soc-001"></a>
@@ -453,7 +485,8 @@ human-review cadence is:
 - **Objective / scope:** Prove follow/unfollow, lists, counts, and persisted/live follow
   notifications work together.
 - **Dependencies:** [TSC-SOC-001](#tsc-soc-001),
-  [TSC-SOC-002](#tsc-soc-002).
+  [TSC-SOC-002](#tsc-soc-002),
+  [TSC-NOTIF-004](#tsc-notif-004).
 - **Expected outputs / artifacts:** Multi-user Playwright scenarios; API/database invariant
   checks; realtime follow-notification test; CI evidence.
 - **AI-verifiable acceptance criteria:**
@@ -582,7 +615,8 @@ human-review cadence is:
 - **Objective / scope:** Prove text/image/link tweets, timelines, flat replies, counters, and
   reply notifications across the real stack.
 - **Dependencies:** [TSC-TWEET-001](#tsc-tweet-001),
-  [TSC-TWEET-002](#tsc-tweet-002).
+  [TSC-TWEET-002](#tsc-tweet-002),
+  [TSC-NOTIF-004](#tsc-notif-004).
 - **Expected outputs / artifacts:** Playwright tweet/reply/media suite; pagination and
   transaction invariant checks; CI artifacts including failure traces/screenshots.
 - **AI-verifiable acceptance criteria:**
@@ -605,8 +639,8 @@ human-review cadence is:
 - **Status:** To Do
 - **Objective / scope:** Implement fan-out-on-read feed retrieval from followed users using
   stable keyset pagination and an optional short-TTL first-page Redis cache.
-- **Dependencies:** [TSC-TWEET-003](#tsc-tweet-003),
-  [TSC-SOC-003](#tsc-soc-003).
+- **Dependencies:** [TSC-TWEET-001](#tsc-tweet-001),
+  [TSC-SOC-001](#tsc-soc-001).
 - **Expected outputs / artifacts:** Feed repository query/service/route; opaque cursor
   codec; deterministic tie-breaking; first-page cache with invalidation/TTL policy if
   retained; query-plan tests; integration/concurrency tests; OpenAPI examples.
@@ -712,7 +746,8 @@ human-review cadence is:
 - **Objective / scope:** Prove likes, counters, optimistic behavior, persistence, and live/
   offline notifications work together.
 - **Dependencies:** [TSC-LIKE-001](#tsc-like-001),
-  [TSC-LIKE-002](#tsc-like-002).
+  [TSC-LIKE-002](#tsc-like-002),
+  [TSC-NOTIF-004](#tsc-notif-004).
 - **Expected outputs / artifacts:** Two-user Playwright like scenarios; counter invariant and
   notification latency checks; CI evidence.
 - **AI-verifiable acceptance criteria:**
@@ -737,6 +772,7 @@ human-review cadence is:
 - **Objective / scope:** Build the notification panel/page, unread badge, authenticated
   WebSocket client, reconnect/backoff/heartbeat behavior, de-duplication, and cache updates.
 - **Dependencies:** [TSC-NOTIF-001](#tsc-notif-001),
+  [TSC-NOTIF-004](#tsc-notif-004),
   [TSC-SOC-002](#tsc-soc-002),
   [TSC-TWEET-002](#tsc-tweet-002),
   [TSC-LIKE-002](#tsc-like-002).
@@ -789,7 +825,7 @@ human-review cadence is:
   provider abstraction, with polling and optional WebSocket completion, safety controls,
   budget/rate limits, and no real-provider use in automated tests.
 - **Dependencies:** [TSC-TWEET-003](#tsc-tweet-003),
-  [TSC-NOTIF-001](#tsc-notif-001).
+  [TSC-NOTIF-004](#tsc-notif-004).
 - **Expected outputs / artifacts:** Provider interface/adapters; versioned LangChain prompt
   templates; Celery jobs; persisted job state; generate/summarize/job-status routes;
   timeouts and bounded retries; moderation, prompt-injection boundaries, output validation,
@@ -948,32 +984,50 @@ human-review cadence is:
 - **Human review gate:** Human performs final exploratory acceptance across all breakpoints.
 
 <a id="tsc-ops-001"></a>
-### TSC-OPS-001 - Implement production packaging, deployment, and release automation
+### TSC-OPS-001 - Implement production packaging and deployment stack
 
 - **Status:** To Do
-- **Objective / scope:** Create the single-VPS production deployment path with versioned
-  images, TLS proxy configuration, migrations, backup/restore, health checks, rollback, and
-  gated release/deploy workflows.
+- **Objective / scope:** Create the single-VPS production deployment path: versioned
+  images, TLS proxy configuration, migrations, health checks, and a repeatable deploy
+  command. Release automation, backup/restore, and rollback are owned by `TSC-OPS-002`.
 - **Dependencies:** [TSC-FOUND-003](#tsc-found-003),
   [TSC-HARD-001](#tsc-hard-001),
   [TSC-HARD-002](#tsc-hard-002).
 - **Expected outputs / artifacts:** Multi-stage production Dockerfiles; Nginx SPA/API/WS
   proxy config with HTTPS/WSS and headers; `docker-compose.prod.yml`; migration pre-start;
-  Celery worker/beat; environment/secret contract; `make deploy`; semver tag image-publish
-  workflow; manual gated deploy/rollback; PostgreSQL and object-storage backup/restore
-  runbook; deployment smoke tests.
+  Celery worker/beat; environment/secret contract; `make deploy`; deployment smoke tests.
 - **AI-verifiable acceptance criteria:**
   - Production images run as non-root where practical, contain no dev dependencies/secrets,
     and pass image builds/scans.
   - A clean production-like deployment migrates, starts healthy, serves SPA/API/docs per
     policy, upgrades WebSockets, runs workers, and uploads/downloads media.
-  - A semver tag publishes matching immutable image tags and release metadata.
-  - Failed health checks stop deployment or trigger the documented rollback path.
-  - Backup and restore recreate verified database records and media in an isolated test.
+  - Failed health checks stop the deployment before traffic is served.
+  - The full production-like bring-up is reproducible from documented commands only.
 - **Verification / evidence:** Record image metadata/scan, production-like smoke test,
-  WebSocket proxy test, migration, backup/restore checksum, and rollback rehearsal.
-- **Human review gate:** Human approves deployment target, secret handling, downtime,
-  backup retention, and rollback procedure before any real deployment.
+  WebSocket proxy test, and migration output.
+- **Human review gate:** Human approves deployment target, secret handling, and downtime
+  expectations before any real deployment.
+
+<a id="tsc-ops-002"></a>
+### TSC-OPS-002 - Implement release automation, backup, and rollback
+
+- **Status:** To Do
+- **Objective / scope:** Automate versioned releases and prove operational recovery:
+  semver-tag-driven image publishing, gated deploy workflow, PostgreSQL and object-storage
+  backup/restore, and a rehearsed rollback procedure.
+- **Dependencies:** [TSC-OPS-001](#tsc-ops-001).
+- **Expected outputs / artifacts:** Semver tag image-publish workflow with release metadata;
+  manual gated deploy workflow; rollback procedure and rehearsal record; PostgreSQL and
+  object-storage backup/restore runbook and automation; restore verification checks.
+- **AI-verifiable acceptance criteria:**
+  - A semver tag publishes matching immutable image tags and release metadata.
+  - The deploy workflow requires an explicit manual gate and records the deployed digests.
+  - A rehearsed rollback restores the previous version and passes the smoke tests.
+  - Backup and restore recreate verified database records and media in an isolated test.
+  - No workflow step exposes secrets in logs or artifacts.
+- **Verification / evidence:** Record a tag-driven publish run, gated deploy evidence,
+  backup/restore checksum comparison, and the rollback rehearsal outcome.
+- **Human review gate:** Human approves backup retention and the rollback procedure.
 
 <a id="tsc-doc-001"></a>
 ### TSC-DOC-001 - Complete living product and developer documentation
@@ -982,7 +1036,8 @@ human-review cadence is:
 - **Objective / scope:** Ensure a new developer, reviewer, or operator can understand, run,
   test, troubleshoot, and deploy the finished system without relying on task history.
 - **Dependencies:** [TSC-QA-001](#tsc-qa-001),
-  [TSC-OPS-001](#tsc-ops-001).
+  [TSC-OPS-001](#tsc-ops-001),
+  [TSC-OPS-002](#tsc-ops-002).
 - **Expected outputs / artifacts:** Root README; local setup and environment reference;
   architecture/data-flow diagrams; ADR index; API/OpenAPI usage; test/coverage guide;
   seed/demo guide; AI provider and cost-control guide; operations/deploy/backup/rollback/
@@ -1009,6 +1064,7 @@ human-review cadence is:
   released application. This task does not add new scope.
 - **Dependencies:** [TSC-QA-001](#tsc-qa-001),
   [TSC-OPS-001](#tsc-ops-001),
+  [TSC-OPS-002](#tsc-ops-002),
   [TSC-DOC-001](#tsc-doc-001).
 - **Expected outputs / artifacts:** Completed release checklist; triaged defect list with no
   open blockers; signed/annotated semver tag per policy; release notes; published immutable
