@@ -6,14 +6,18 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aioboto3>=15.5.0",
+    "alembic>=1.16.0",
+    "argon2-cffi>=25.1.0",
     "asyncpg>=0.31.0",
     "celery>=5.6.3",
     "fastapi>=0.141.1",
+    "faker>=30.0.0",
     "pydantic-settings>=2.15.0",
     "redis>=5",
     "sqlalchemy[asyncio]>=2.0.52",
     "sqlmodel>=0.0.39",
     "structlog>=26.1.0",
+    "uuid6>=2024.7.10",
     "uvicorn[standard]>=0.52.2",
 ]
 
@@ -66,5 +70,5 @@ source = ["app"]
 # CI fails the backend job if coverage drops below this threshold; bump it
 # upward whenever a feature task lands with well-tested code.
 [tool.coverage.report]
-fail_under = 80
+fail_under = 90
 show_missing = true
