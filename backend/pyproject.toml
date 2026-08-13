@@ -5,8 +5,15 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aioboto3>=15.5.0",
+    "asyncpg>=0.31.0",
+    "celery>=5.6.3",
     "fastapi>=0.141.1",
+    "pydantic-settings>=2.15.0",
+    "redis>=5",
+    "sqlalchemy[asyncio]>=2.0.52",
     "sqlmodel>=0.0.39",
+    "structlog>=26.1.0",
     "uvicorn[standard]>=0.52.2",
 ]
 
@@ -39,6 +46,14 @@ strict = true
 mypy_path = "."
 explicit_package_bases = true
 
+# Neither package ships inline types or a third-party stub package (aioboto3
+# unofficially delegates to aiobotocore/botocore internals; celery is stubless
+# upstream). Everywhere they're imported, values crossing the boundary are
+# explicitly typed/narrowed on our side instead of trusted from these libs.
+[[tool.mypy.overrides]]
+module = ["aioboto3.*", "celery.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
@@ -51,5 +66,5 @@ source = ["app"]
 # CI fails the backend job if coverage drops below this threshold; bump it
 # upward whenever a feature task lands with well-tested code.
 [tool.coverage.report]
-fail_under = 60
+fail_under = 80
 show_missing = true

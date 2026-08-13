@@ -47,8 +47,8 @@ and the relevant living documentation in the same pull request.
 | Status | Count |
 |---|---:|
 | Done | 5 |
-| In Progress | 0 |
-| To Do | 36 |
+| In Progress | 1 |
+| To Do | 35 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -200,14 +200,14 @@ human-review cadence is:
 <a id="tsc-core-001"></a>
 ### TSC-CORE-001 - Implement the backend application platform
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Build the shared FastAPI platform used by every feature: app
   factory, configuration, async resource lifecycle, API versioning, request IDs,
   structured logging, standard errors, security headers, and health/readiness checks.
   Product endpoints are out of scope.
 - **Dependencies:** [TSC-FOUND-002](#tsc-found-002),
   [TSC-FOUND-003](#tsc-found-003).
-- **Expected outputs / artifacts:** Typed settings; async PostgreSQL, Redis, MinIO, and
+- **Expected outputs / artifacts:** Typed settings using pydantic settings; async PostgreSQL, Redis, MinIO, and
   Celery wiring; `/healthz`, `/readyz`, `/api/v1/docs`, and `/api/v1/openapi.json`;
   RFC-9457-inspired error handlers; request-ID middleware; JSON log configuration;
   security-header middleware; environment-driven CORS configuration for the SPA origin;

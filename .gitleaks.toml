@@ -1,0 +1,12 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks#configuration
+
+title = "twitter-smart-clone gitleaks config"
+
+[extend]
+# Use the default gitleaks ruleset as a base.
+useDefault = true
+
+[[allowlists]]
+description = "Example bearer token used in docs/backend-platform.md curl verification snippet — not a real credential"
+commits = ["25dd5ebeaaee25bf15d635dc304732e6b4c51d63"]

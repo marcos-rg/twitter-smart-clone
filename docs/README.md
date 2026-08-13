@@ -9,3 +9,4 @@ It is distinct from [`specification/`](../specification/), which contains the up
 - [monorepo-scaffold.md](./monorepo-scaffold.md) — backend/frontend project scaffold, tooling, and verified setup commands (`TSC-FOUND-001`).
 - [local-dev-stack.md](./local-dev-stack.md) — Docker Compose local development stack (API, worker, frontend, PostgreSQL, Redis, MinIO), Makefile targets, and verified bring-up commands (`TSC-FOUND-002`).
 - [design-system.md](./design-system.md) — Tailwind design tokens, core UI components, responsive app shell, and the `/lab` component interaction lab with accessibility and responsive evidence (`TSC-UX-001`).
+- [backend-platform.md](./backend-platform.md) — shared FastAPI app platform: typed settings, async PostgreSQL/Redis/MinIO/Celery lifecycle, API versioning/OpenAPI, request IDs, structured logging, the standard error envelope, security headers, CORS, and verification evidence (`TSC-CORE-001`).
