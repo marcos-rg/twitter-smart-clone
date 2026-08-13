@@ -100,7 +100,7 @@ async def check_database(resources: AppResources, timeout: float) -> bool:
             await conn.execute(text("SELECT 1"))
         return True
     except Exception:  # noqa: BLE001 - any failure means "not ready"
-        await logger.awarning("readiness_check_failed", dependency="postgres", exc_info=True)
+        logger.warning("readiness_check_failed", dependency="postgres", exc_info=True)
         return False
 
 

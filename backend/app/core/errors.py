@@ -150,7 +150,7 @@ async def validation_exception_handler(request: Request, exc: Exception) -> JSON
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle any exception not otherwise caught: log the traceback, hide details."""
-    await logger.aexception("unhandled_exception", exc_info=exc)
+    logger.error("unhandled_exception", exc_info=exc)
     return internal_error_response(request)
 
 

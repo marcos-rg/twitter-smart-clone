@@ -62,7 +62,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
         except Exception as exc:  # noqa: BLE001 - converted to the standard envelope below
-            await logger.aexception("unhandled_exception", exc_info=exc)
+            logger.exception("unhandled_exception", exc_info=exc)
             response = internal_error_response(request)
 
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
