@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 1 |
+| Done | 2 |
 | In Progress | 0 |
-| To Do | 40 |
+| To Do | 39 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -98,7 +98,7 @@ human-review cadence is:
 <a id="tsc-found-001"></a>
 ### TSC-FOUND-001 - Scaffold the typed monorepo
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Create the backend and frontend structures from the specification,
   pin supported runtimes, and establish repeatable dependency management and code-quality
   commands. This task does not implement product features.
