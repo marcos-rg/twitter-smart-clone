@@ -46,8 +46,8 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 0 |
-| In Progress | 1 |
+| Done | 1 |
+| In Progress | 0 |
 | To Do | 40 |
 
 The counts above reflect the repository at the time this plan was created: requirements
@@ -71,7 +71,7 @@ human-review cadence is:
 <a id="tsc-plan-001"></a>
 ### TSC-PLAN-001 - Approve v1 scope and architecture decisions
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Reconcile the requirements and draft specification, approve the
   v1 boundaries, and record decisions that affect implementation. Resolve at least the
   tweet-deletion conflict, refresh-token family/reuse behavior, WebSocket token transport,
