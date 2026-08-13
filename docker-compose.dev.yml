@@ -1,0 +1,47 @@
+name: twitter-smart-clone
+
+# Development overrides (TSC-FOUND-002): bind-mounts source code into the
+# `backend`, `worker`, and `frontend` containers so edits on the host are
+# picked up by uvicorn --reload / Vite HMR without an image rebuild.
+#
+# Usage: `docker compose -f docker-compose.yml -f docker-compose.dev.yml up`
+# (or simply `make up`, which wires both files together).
+
+services:
+  backend:
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/tests:/app/tests
+      - ./backend/scripts:/app/scripts
+      - ./backend/alembic:/app/alembic
+      - ./backend/pyproject.toml:/app/pyproject.toml
+      - backend_venv:/app/.venv
+
+  worker:
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/tests:/app/tests
+      - ./backend/scripts:/app/scripts
+      - ./backend/alembic:/app/alembic
+      - ./backend/pyproject.toml:/app/pyproject.toml
+      - backend_venv:/app/.venv
+
+  frontend:
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/tests:/app/tests
+      - ./frontend/e2e:/app/e2e
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - frontend_node_modules:/app/node_modules
+    environment:
+      # Vite's HMR client needs to reconnect through the mapped host port.
+      CHOKIDAR_USEPOLLING: "true"
+
+volumes:
+  # Named volumes (instead of bind-mounting .venv/node_modules from the
+  # host) keep the container's installed dependencies isolated from
+  # whatever is (or isn't) installed on the host OS/architecture.
+  backend_venv:
+  frontend_node_modules:

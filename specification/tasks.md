@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 2 |
+| Done | 3 |
 | In Progress | 0 |
-| To Do | 39 |
+| To Do | 38 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -121,7 +121,7 @@ human-review cadence is:
 <a id="tsc-found-002"></a>
 ### TSC-FOUND-002 - Build the local container development stack
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Make local development reproducible with containers for the API,
   worker, frontend, PostgreSQL 16, Redis 7, and MinIO, including hot reload and persistent
   development volumes. Production hardening is deferred to `TSC-OPS-001`.
