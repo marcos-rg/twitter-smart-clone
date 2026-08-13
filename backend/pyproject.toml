@@ -66,5 +66,5 @@ source = ["app"]
 # CI fails the backend job if coverage drops below this threshold; bump it
 # upward whenever a feature task lands with well-tested code.
 [tool.coverage.report]
-fail_under = 60
+fail_under = 80
 show_missing = true
