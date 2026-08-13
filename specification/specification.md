@@ -666,9 +666,11 @@ Monorepo:
 
 ```
 twitter-smart-clone/
-├── documents/
+├── specification/
 │   ├── requirements.md
-│   └── specification.md
+│   ├── specification.md
+│   └── tasks.md               # implementation task tracking
+├── docs/                      # living app documentation (architecture, guides, ADRs)
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                # FastAPI app factory
@@ -701,8 +703,6 @@ twitter-smart-clone/
 │   ├── package.json
 │   └── Dockerfile
 ├── docker-compose.yml
-├── docker-compose.dev.yml
-├── docker-compose.prod.yml
 ├── Makefile
 ├── .env.example
 ├── .github/workflows/            # CI/CD
