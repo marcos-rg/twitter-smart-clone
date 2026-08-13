@@ -49,7 +49,7 @@ services:
       start_period: 5s
 
   minio:
-    image: minio/minio:${MINIO_IMAGE_TAG:-RELEASE.2026-07-23T15-54-02Z}
+    image: minio/minio:${MINIO_IMAGE_TAG:-RELEASE.2025-09-07T16-13-09Z}
     restart: unless-stopped
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
@@ -70,7 +70,7 @@ services:
   # One-shot job: creates the media bucket on a fresh volume, then exits.
   # Not part of the "stack is up" health signal — only `minio` itself is.
   minio-init:
-    image: minio/mc:RELEASE.2026-07-21T05-28-08Z
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
     depends_on:
       minio:
         condition: service_healthy
