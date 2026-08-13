@@ -45,9 +45,7 @@ export function TweetCard({
             {formatTimestamp(timestamp)}
           </time>
         </header>
-        <p className="mt-1 break-words whitespace-pre-wrap text-foreground">
-          {content}
-        </p>
+        <p className="mt-1 break-words whitespace-pre-wrap text-foreground">{content}</p>
         <footer className="mt-2 flex max-w-xs justify-between text-sm text-muted">
           <ActionButton label={`Reply, ${replyCount} replies`} count={replyCount} icon="💬" />
           <ActionButton label={`Repost, ${repostCount} reposts`} count={repostCount} icon="🔁" />
@@ -58,15 +56,7 @@ export function TweetCard({
   )
 }
 
-function ActionButton({
-  label,
-  count,
-  icon,
-}: {
-  label: string
-  count: number
-  icon: string
-}) {
+function ActionButton({ label, count, icon }: { label: string; count: number; icon: string }) {
   return (
     <button
       type="button"

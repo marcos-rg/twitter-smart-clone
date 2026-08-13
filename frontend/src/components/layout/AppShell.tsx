@@ -38,9 +38,7 @@ export function AppShell({ children }: AppShellProps) {
           aria-label="Primary"
           className="sticky top-0 hidden h-screen w-16 shrink-0 flex-col gap-2 border-r border-border px-2 py-4 sm:flex lg:w-64 lg:px-4"
         >
-          <span className="hidden px-2 pb-4 text-lg font-bold lg:block">
-            Twitter Smart Clone
-          </span>
+          <span className="hidden px-2 pb-4 text-lg font-bold lg:block">Twitter Smart Clone</span>
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -68,7 +66,7 @@ export function AppShell({ children }: AppShellProps) {
       </div>
 
       <nav
-        aria-label="Primary"
+        aria-label="Primary mobile"
         className="fixed inset-x-0 bottom-0 z-40 flex justify-around border-t border-border bg-canvas py-2 sm:hidden"
       >
         {navItems.map((item) => (

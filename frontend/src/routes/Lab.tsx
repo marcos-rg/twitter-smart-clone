@@ -20,11 +20,11 @@ const LONG_CONTENT =
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={`lab-${title.replace(/\s+/g, '-').toLowerCase()}`} className="border-b border-border px-4 py-6">
-      <h2
-        id={`lab-${title.replace(/\s+/g, '-').toLowerCase()}`}
-        className="mb-4"
-      >
+    <section
+      aria-labelledby={`lab-${title.replace(/\s+/g, '-').toLowerCase()}`}
+      className="border-b border-border px-4 py-6"
+    >
+      <h2 id={`lab-${title.replace(/\s+/g, '-').toLowerCase()}`} className="mb-4">
         {title}
       </h2>
       <div className="flex flex-col gap-4">{children}</div>
@@ -82,13 +82,22 @@ export function Lab() {
       <Section title="Input">
         <Input label="Username" placeholder="e.g. ada_lovelace" />
         <Input label="Email" hint="We will never share your email." placeholder="you@example.com" />
-        <Input label="Password" type="password" error="Password must be at least 8 characters." defaultValue="short" />
+        <Input
+          label="Password"
+          type="password"
+          error="Password must be at least 8 characters."
+          defaultValue="short"
+        />
         <Input label="Disabled field" disabled defaultValue="Cannot edit" />
       </Section>
 
       <Section title="Textarea">
         <Textarea label="Bio" placeholder="Tell the world about yourself" />
-        <Textarea label="Bio (error)" error="Bio cannot exceed 160 characters." defaultValue={'x'.repeat(200)} />
+        <Textarea
+          label="Bio (error)"
+          error="Bio cannot exceed 160 characters."
+          defaultValue={'x'.repeat(200)}
+        />
       </Section>
 
       <Section title="Avatar">
@@ -102,11 +111,7 @@ export function Lab() {
 
       <Section title="Modal">
         <Button onClick={() => setModalOpen(true)}>Open modal</Button>
-        <Modal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          title="Example modal"
-        >
+        <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Example modal">
           <p className="text-sm text-muted">
             Focus is trapped here. Press Escape or click the backdrop to close.
           </p>
@@ -143,8 +148,16 @@ export function Lab() {
         <Tabs
           aria-label="Example feed tabs"
           tabs={[
-            { id: 'for-you', label: 'For you', content: <p className="text-sm text-muted">Algorithmic feed content.</p> },
-            { id: 'following', label: 'Following', content: <p className="text-sm text-muted">Chronological feed content.</p> },
+            {
+              id: 'for-you',
+              label: 'For you',
+              content: <p className="text-sm text-muted">Algorithmic feed content.</p>,
+            },
+            {
+              id: 'following',
+              label: 'Following',
+              content: <p className="text-sm text-muted">Chronological feed content.</p>,
+            },
             { id: 'disabled', label: 'Disabled', content: null, disabled: true },
           ]}
         />

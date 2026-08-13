@@ -34,9 +34,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         aria-describedby={hasMessage ? messageId : undefined}
         className={[
           'h-10 rounded-control border bg-surface px-3 text-foreground transition-colors duration-150 motion-reduce:transition-none',
-          error
-            ? 'border-danger'
-            : 'border-border hover:border-muted focus:border-brand',
+          error ? 'border-danger' : 'border-border hover:border-muted focus:border-brand',
           className,
         ].join(' ')}
         {...rest}

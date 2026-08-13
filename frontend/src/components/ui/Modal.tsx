@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  type ReactNode,
-} from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 
 export interface ModalProps {
   open: boolean
@@ -46,9 +41,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       }
       if (event.key !== 'Tab' || !dialog) return
 
-      const items = Array.from(
-        dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-      )
+      const items = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
       if (items.length === 0) {
         event.preventDefault()
         dialog.focus()

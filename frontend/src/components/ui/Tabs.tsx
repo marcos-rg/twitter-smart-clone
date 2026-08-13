@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useId,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type ReactNode,
-} from 'react'
+import { useCallback, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 export interface TabItem {
   id: string
@@ -31,9 +24,7 @@ export interface TabsProps {
 export function Tabs({ tabs, defaultTab, 'aria-label': ariaLabel }: TabsProps) {
   const baseId = useId()
   const enabledTabs = tabs.filter((t) => !t.disabled)
-  const [activeId, setActiveId] = useState(
-    defaultTab ?? enabledTabs[0]?.id ?? tabs[0]?.id,
-  )
+  const [activeId, setActiveId] = useState(defaultTab ?? enabledTabs[0]?.id ?? tabs[0]?.id)
   const tabRefs = useRef(new Map<string, HTMLButtonElement>())
 
   const setTabRef = useCallback(
@@ -59,8 +50,7 @@ export function Tabs({ tabs, defaultTab, 'aria-label': ariaLabel }: TabsProps) {
         nextIndex = (currentIndex + 1) % enabledTabs.length
         break
       case 'ArrowLeft':
-        nextIndex =
-          (currentIndex - 1 + enabledTabs.length) % enabledTabs.length
+        nextIndex = (currentIndex - 1 + enabledTabs.length) % enabledTabs.length
         break
       case 'Home':
         nextIndex = 0
