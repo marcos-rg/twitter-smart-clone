@@ -30,9 +30,9 @@ lint: ## Run backend + frontend formatting/lint/type checks inside containers.
 	$(COMPOSE) run --rm frontend npm run format:check
 	$(COMPOSE) run --rm frontend npm run typecheck
 
-test: ## Run backend + frontend test suites inside containers.
-	$(COMPOSE) run --rm backend uv run pytest
-	$(COMPOSE) run --rm frontend npm run test
+test: ## Run backend + frontend test suites (with coverage gates) inside containers.
+	$(COMPOSE) run --rm backend sh -c "uv run coverage run -m pytest && uv run coverage report"
+	$(COMPOSE) run --rm frontend npm run test:coverage
 
 seed: ## Populate demo data for local development.
 	@echo "No seed script yet: the seed CLI is delivered by TSC-DATA-001."
