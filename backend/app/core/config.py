@@ -1,0 +1,94 @@
+"""Typed application settings loaded from environment variables (12-factor).
+
+Every value has a safe local-development default so the app boots without a
+`.env` file, matching the non-secret defaults in `.env.example` /
+`docker-compose.yml`. Real deployments override these via the environment.
+"""
+
+from __future__ import annotations
+
+from functools import lru_cache
+from typing import Annotated
+
+from pydantic import BeforeValidator, Field
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+
+def _split_csv(value: object) -> object:
+    """Allow `CORS_ALLOWED_ORIGINS` to be a comma-separated string in env/.env."""
+    if isinstance(value, str):
+        return [origin.strip() for origin in value.split(",") if origin.strip()]
+    return value
+
+
+class Settings(BaseSettings):
+    """Application configuration sourced from environment variables."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    # --- App metadata -----------------------------------------------------
+    app_name: str = "Twitter Smart Clone API"
+    app_version: str = "0.1.0"
+    environment: str = Field(default="local", description="local|test|prod")
+    log_level: str = "INFO"
+
+    # --- PostgreSQL ---------------------------------------------------------
+    database_url: str = (
+        "postgresql+asyncpg://twitter_smart_clone:twitter_smart_clone_dev"
+        "@postgres:5432/twitter_smart_clone"
+    )
+    database_pool_size: int = 5
+    database_max_overflow: int = 10
+
+    # --- Redis ---------------------------------------------------------------
+    redis_url: str = "redis://redis:6379/0"
+
+    # --- MinIO / S3-compatible object storage ---------------------------------
+    minio_endpoint: str = "http://minio:9000"
+    minio_bucket: str = "twitter-smart-clone-media"
+    minio_access_key: str = Field(default="minioadmin", alias="MINIO_ROOT_USER")
+    minio_secret_key: str = Field(default="minioadmin-dev-secret", alias="MINIO_ROOT_PASSWORD")
+    minio_region: str = "us-east-1"
+
+    # --- Celery ----------------------------------------------------------------
+    celery_broker_url: str | None = None
+    celery_result_backend: str | None = None
+
+    # --- Security / auth ---------------------------------------------------------
+    jwt_secret_key: str = "dev-only-change-me"
+
+    # --- CORS --------------------------------------------------------------------
+    cors_allowed_origins: Annotated[list[str], NoDecode, BeforeValidator(_split_csv)] = Field(
+        default_factory=lambda: ["http://localhost:5173"]
+    )
+
+    # --- Request handling ---------------------------------------------------------
+    request_id_header: str = "X-Request-ID"
+
+    # --- Readiness -----------------------------------------------------------------
+    readiness_check_timeout_seconds: float = 2.0
+
+    @property
+    def effective_celery_broker_url(self) -> str:
+        """Celery broker URL, defaulting to the shared Redis instance."""
+        return self.celery_broker_url or self.redis_url
+
+    @property
+    def effective_celery_result_backend(self) -> str:
+        """Celery result backend URL, defaulting to the shared Redis instance."""
+        return self.celery_result_backend or self.redis_url
+
+    @property
+    def is_production(self) -> bool:
+        """Whether the app is running in a production-like environment."""
+        return self.environment.lower() in {"prod", "production"}
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """Return a cached `Settings` instance (env is read once per process)."""
+    return Settings()
