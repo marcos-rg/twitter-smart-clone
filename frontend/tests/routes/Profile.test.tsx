@@ -111,6 +111,9 @@ describe('Profile (other user)', () => {
           bio: 'Fixing things.',
           avatar_key: null,
           created_at: '2025-06-01T00:00:00Z',
+          followers_count: 3,
+          following_count: 1,
+          is_following: false,
         }),
       ),
       http.get('*/api/v1/users/bob/tweets', () =>

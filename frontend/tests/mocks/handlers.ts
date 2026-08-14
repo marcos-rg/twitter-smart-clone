@@ -66,6 +66,9 @@ export const handlers = [
       bio: testUser.bio,
       avatar_key: testUser.avatar_key,
       created_at: testUser.created_at,
+      followers_count: 0,
+      following_count: 0,
+      is_following: false,
     }
     return HttpResponse.json(publicProfile)
   }),
@@ -80,6 +83,25 @@ export const handlers = [
   ),
 
   http.get(`${API_BASE_URL}/api/v1/users/search`, () =>
+    HttpResponse.json({ data: [], page: { next_cursor: null } }),
+  ),
+
+  // `/users/:username/follow`, `/followers`, `/following` defaults: follow
+  // succeeds idempotently and lists start empty. Individual tests override
+  // with `server.use(...)` for forced-failure and populated-list scenarios.
+  http.post(`${API_BASE_URL}/api/v1/users/:username/follow`, () =>
+    HttpResponse.json({ following: true, followers_count: 1 }),
+  ),
+
+  http.delete(`${API_BASE_URL}/api/v1/users/:username/follow`, () =>
+    HttpResponse.json({ following: false, followers_count: 0 }),
+  ),
+
+  http.get(`${API_BASE_URL}/api/v1/users/:username/followers`, () =>
+    HttpResponse.json({ data: [], page: { next_cursor: null } }),
+  ),
+
+  http.get(`${API_BASE_URL}/api/v1/users/:username/following`, () =>
     HttpResponse.json({ data: [], page: { next_cursor: null } }),
   ),
 ]

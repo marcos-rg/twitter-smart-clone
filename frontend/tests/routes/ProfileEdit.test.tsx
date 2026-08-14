@@ -116,6 +116,9 @@ describe('ProfileEdit', () => {
           bio: null,
           avatar_key: null,
           created_at: '2025-06-01T00:00:00Z',
+          followers_count: 0,
+          following_count: 0,
+          is_following: false,
         }),
       ),
       http.get('*/api/v1/users/bob/tweets', () =>
