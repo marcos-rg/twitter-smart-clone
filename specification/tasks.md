@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 9 |
-| In Progress | 1 |
-| To Do | 31 |
+| Done | 11 |
+| In Progress | 0 |
+| To Do | 30 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -304,7 +304,7 @@ human-review cadence is:
 <a id="tsc-auth-003"></a>
 ### TSC-AUTH-003 - Verify the authentication vertical slice
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Prove backend and frontend auth work together in the container
   stack, including failure and recovery paths.
 - **Dependencies:** [TSC-AUTH-001](#tsc-auth-001),
@@ -329,7 +329,7 @@ human-review cadence is:
 <a id="tsc-user-001"></a>
 ### TSC-USER-001 - Implement profile and user-search backend
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Implement public profiles, self-editing, profile timelines contract,
   and exact/prefix/fuzzy user search with object-level authorization.
 - **Dependencies:** [TSC-AUTH-003](#tsc-auth-003),

@@ -37,7 +37,7 @@ app/
 ├── schemas/           # Pydantic DTOs
 ├── repositories/      # data access
 ├── services/          # business logic + authz
-├── routers/            # HTTP + WS endpoints (health.py today)
+├── routers/            # HTTP + WS endpoints (health, auth, users, ...)
 ├── ws/                 # ConnectionManager + Redis pub/sub
 ├── ai/                 # LangChain chains, prompts, guardrails
 └── workers/            # Celery app (celery_app.py) + tasks
