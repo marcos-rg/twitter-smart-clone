@@ -147,8 +147,8 @@ export interface TweetView {
   parent_tweet_id: string | null
   like_count: number
   reply_count: number
-  /** Whether the authenticated caller has liked this tweet. Display-only in
-   * this task — wiring the like button is TSC-LIKE-002. */
+  /** Whether the authenticated caller has liked this tweet. Wired to
+   * `POST`/`DELETE /tweets/{id}/like` by `LikeButton` (TSC-LIKE-002). */
   liked_by_viewer: boolean
   media: TweetMediaOut[]
   links: LinkEntity[]
@@ -167,6 +167,19 @@ export interface TweetCreateRequest {
 export interface TweetListResponse {
   data: TweetView[]
   page: PageInfo
+}
+
+/**
+ * `/tweets/{id}/like` types (spec §6.1, §6.3 "Likes", TSC-LIKE-001/002).
+ */
+
+/** `POST`/`DELETE /tweets/{id}/like` response: the relationship after the
+ * call plus the tweet's updated like count, enough to update the UI from
+ * this response alone (no tweet re-fetch needed). Mirrors
+ * `FollowRelationship`. */
+export interface LikeRelationship {
+  liked: boolean
+  like_count: number
 }
 
 /**
