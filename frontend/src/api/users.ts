@@ -18,6 +18,12 @@ export function updateMyProfile(payload: UserProfileUpdateRequest): Promise<User
   return request<UserPrivateProfile>(`${BASE}/me`, { method: 'PATCH', body: payload })
 }
 
+/** Confirms a presigned avatar upload (`purpose: "avatar"`), setting
+ * `avatar_key` on the caller. See `POST /api/v1/users/me/avatar` (TSC-MEDIA-002). */
+export function confirmMyAvatar(key: string): Promise<UserPrivateProfile> {
+  return request<UserPrivateProfile>(`${BASE}/me/avatar`, { method: 'POST', body: { key } })
+}
+
 export interface CursorPageParams {
   cursor?: string
   limit?: number
