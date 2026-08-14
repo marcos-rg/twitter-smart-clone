@@ -6,11 +6,9 @@ from dataclasses import dataclass
 
 from app.core.errors import AppError
 from app.models.base import utcnow
-from app.models.tweet import Tweet
 from app.models.user import User
 from app.repositories.follows import FollowRepository
-from app.repositories.pagination import Cursor, InvalidCursorError, Page, decode_cursor
-from app.repositories.tweets import TweetRepository
+from app.repositories.pagination import Page
 from app.repositories.users import (
     InvalidUserSearchCursorError,
     UserRepository,
@@ -56,11 +54,8 @@ class ProfileView:
 
 
 class UsersService:
-    def __init__(
-        self, users: UserRepository, tweets: TweetRepository, follows: FollowRepository
-    ) -> None:
+    def __init__(self, users: UserRepository, follows: FollowRepository) -> None:
         self.users = users
-        self.tweets = tweets
         self.follows = follows
 
     async def get_public_profile(self, username: str) -> User:
@@ -111,13 +106,6 @@ class UsersService:
         await self.users.session.flush()
         return current_user
 
-    async def get_timeline(
-        self, *, username: str, cursor: str | None, limit: int | None
-    ) -> Page[Tweet]:
-        user = await self.get_public_profile(username)
-        decoded_cursor = self._decode_timeline_cursor(cursor)
-        return await self.tweets.list_by_author(user.id, cursor=decoded_cursor, limit=limit)
-
     async def search_users(
         self, *, query: str, mode: SearchMode, cursor: str | None, limit: int | None
     ) -> Page[User]:
@@ -130,15 +118,6 @@ class UsersService:
         if mode == SearchMode.prefix:
             return await self.users.search_prefix(query, cursor=decoded_cursor, limit=limit)
         return await self.users.search_fuzzy(query, cursor=decoded_cursor, limit=limit)
-
-    @staticmethod
-    def _decode_timeline_cursor(cursor: str | None) -> Cursor | None:
-        if cursor is None:
-            return None
-        try:
-            return decode_cursor(cursor)
-        except InvalidCursorError as exc:
-            raise InvalidPaginationCursorError() from exc
 
     @staticmethod
     def _decode_search_cursor(cursor: str | None) -> UserSearchCursor | None:

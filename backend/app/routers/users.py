@@ -5,18 +5,26 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
+from redis.asyncio import Redis
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import Settings
-from app.core.deps import get_current_user, get_db_session, get_resources, get_settings_dep
+from app.core.deps import (
+    get_current_user,
+    get_db_session,
+    get_redis,
+    get_resources,
+    get_settings_dep,
+)
 from app.core.resources import AppResources
 from app.core.storage import build_storage
 from app.models.user import User
 from app.repositories.follows import FollowRepository
 from app.repositories.pending_uploads import PendingUploadRepository
-from app.repositories.tweets import TweetRepository
 from app.repositories.users import UserRepository
+from app.routers.tweets import build_tweets_service
 from app.schemas.media import AvatarConfirmRequest
+from app.schemas.tweets import TweetListPage, TweetListResponse
 from app.schemas.users import (
     PageInfo,
     SearchMode,
@@ -25,19 +33,23 @@ from app.schemas.users import (
     UserPublicProfile,
     UserSearchItem,
     UserSearchResponse,
-    UserTimelineItem,
-    UserTimelineResponse,
 )
 from app.services.media import MediaLimits, MediaService
+from app.services.tweets import TweetsService
 from app.services.users import UsersService
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
 def _users_service(session: AsyncSession = Depends(get_db_session)) -> UsersService:
-    return UsersService(
-        UserRepository(session), TweetRepository(session), FollowRepository(session)
-    )
+    return UsersService(UserRepository(session), FollowRepository(session))
+
+
+def _tweets_service(
+    session: AsyncSession = Depends(get_db_session),
+    redis: Redis = Depends(get_redis),
+) -> TweetsService:
+    return build_tweets_service(session, redis)
 
 
 def _media_service(
@@ -134,18 +146,19 @@ async def confirm_my_avatar(
 
 @router.get(
     "/{username}/tweets",
-    response_model=UserTimelineResponse,
-    summary="List a user's tweets with cursor pagination.",
+    response_model=TweetListResponse,
+    summary="List a user's tweets (their timeline) with cursor pagination.",
 )
 async def get_user_tweets(
     username: str,
     cursor: Annotated[str | None, Query()] = None,
     limit: Annotated[int | None, Query(ge=1, le=50)] = None,
-    _: User = Depends(get_current_user),
-    users_service: UsersService = Depends(_users_service),
-) -> UserTimelineResponse:
-    page = await users_service.get_timeline(username=username, cursor=cursor, limit=limit)
-    return UserTimelineResponse(
-        data=[UserTimelineItem.model_validate(tweet) for tweet in page.items],
-        page=PageInfo(next_cursor=page.next_cursor),
+    current_user: User = Depends(get_current_user),
+    tweets_service: TweetsService = Depends(_tweets_service),
+) -> TweetListResponse:
+    page = await tweets_service.get_user_timeline(
+        username, current_user, cursor=cursor, limit=limit
+    )
+    return TweetListResponse(
+        data=list(page.items), page=TweetListPage(next_cursor=page.next_cursor)
     )
