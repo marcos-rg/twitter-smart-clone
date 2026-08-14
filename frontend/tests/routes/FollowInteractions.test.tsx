@@ -56,7 +56,8 @@ function mockBobProfile(
 }
 
 describe('FollowButton', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await queryClient.cancelQueries()
     queryClient.clear()
   })
   it('renders no follow control on your own profile', async () => {
