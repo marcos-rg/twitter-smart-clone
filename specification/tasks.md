@@ -47,8 +47,8 @@ and the relevant living documentation in the same pull request.
 | Status | Count |
 |---|---:|
 | Done | 16 |
-| In Progress | 0 |
-| To Do | 25 |
+| In Progress | 1 |
+| To Do | 24 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -468,7 +468,7 @@ human-review cadence is:
 <a id="tsc-soc-002"></a>
 ### TSC-SOC-002 - Implement follow and social-list interfaces
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Add follow/unfollow controls and follower/following lists with
   optimistic updates and rollback.
 - **Dependencies:** [TSC-SOC-001](#tsc-soc-001),
