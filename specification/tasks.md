@@ -46,8 +46,8 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 18 |
-| In Progress | 1 |
+| Done | 19 |
+| In Progress | 0 |
 | To Do | 22 |
 
 The counts above reflect the repository at the time this plan was created: requirements
@@ -514,7 +514,7 @@ human-review cadence is:
 <a id="tsc-media-001"></a>
 ### TSC-MEDIA-001 - Implement secure media upload backend
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Implement direct-to-S3/MinIO image uploads for tweet images and
   avatars using presigned URLs and server-side object confirmation.
 - **Dependencies:** [TSC-AUTH-003](#tsc-auth-003),
