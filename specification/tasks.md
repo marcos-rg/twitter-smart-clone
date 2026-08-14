@@ -47,8 +47,8 @@ and the relevant living documentation in the same pull request.
 | Status | Count |
 |---|---:|
 | Done | 14 |
-| In Progress | 0 |
-| To Do | 27 |
+| In Progress | 1 |
+| To Do | 26 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -417,7 +417,7 @@ human-review cadence is:
 <a id="tsc-notif-004"></a>
 ### TSC-NOTIF-004 - Build authenticated realtime WebSocket infrastructure
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Deliver the realtime transport that pushes persisted notification
   events to online clients: authenticated WebSocket endpoint, connection lifecycle,
   heartbeat, Redis subscriber bridge, and multi-worker routing. The notification resource
