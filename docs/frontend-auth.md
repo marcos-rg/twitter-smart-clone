@@ -82,6 +82,36 @@ just "you were never logged in"). The `Login` screen reads and immediately
 acknowledges that flag on mount, showing "Your session has expired. Please
 log in again." exactly once — back/forward navigation won't re-show it.
 
+## Full-stack E2E verification (`TSC-AUTH-003`)
+
+- **Playwright, real stack** (`frontend/e2e-auth/auth-flow.spec.ts`,
+  `frontend/playwright.auth.config.ts`): runs against the actual
+  containerized `frontend` dev server talking to the real `backend`
+  container, real PostgreSQL, and real Redis — no mocks. Covers register,
+  login, protected navigation (guards redirect correctly both ways), reload/
+  session restoration, logout, invalid credentials (wrong password and
+  unknown email), duplicate registration, expired-access-token recovery, and
+  revoked-refresh-token reuse detection (whole-family revocation). See
+  [`docs/auth-threat-checklist.md`](./auth-threat-checklist.md) for how each
+  scenario maps to a threat, and `docker-compose.e2e.yml` /
+  [`docs/local-dev-stack.md`](./local-dev-stack.md) for how the stack is run.
+  `frontend/e2e-auth/fixtures.ts` extends every test with automatic
+  assertions: no browser console error, no failed/unhandled request, and no
+  access/refresh token leaking into `localStorage`/`sessionStorage`/
+  `document.cookie`.
+- **Bug found and fixed by this real-browser verification**:
+  `useSessionBootstrap` ([`src/features/auth/hooks.ts`](../frontend/src/features/auth/hooks.ts))
+  previously gated its terminal `setSession`/`clear` calls on a `cancelled`
+  flag set by the effect's cleanup function. Under React 18 `StrictMode`'s
+  dev-only double effect invocation, that cleanup ran (marking the in-flight
+  bootstrap "cancelled") *before* the `/auth/refresh` + `/auth/me` round trip
+  resolved, so the store was left stuck in `loading` forever — every route
+  showed the "Restoring your session" skeleton indefinitely in a real
+  browser. The Vitest/RTL suite never caught this because it doesn't render
+  under `StrictMode`. Fixed by relying solely on the `ranRef` guard (which
+  survives the simulated unmount/remount for the same component instance) to
+  make bootstrap idempotent, with no cleanup-based cancellation at all.
+
 ## Testing
 
 - **Vitest + RTL + MSW** (`frontend/tests/features/auth/`,
@@ -93,12 +123,17 @@ log in again." exactly once — back/forward navigation won't re-show it.
   never lands there. MSW (`tests/mocks/`) intercepts the client's `fetch`
   calls at the network level; `tests/setup.ts` starts/resets/stops the MSW
   server and resets the Zustand store between tests.
-- **Playwright** (`frontend/e2e/auth.spec.ts`): renders `/login` and
-  `/register` at mobile (390×844) and desktop (1440×900) viewports and saves
-  screenshots to `frontend/test-results/screenshots/` as review evidence.
-  `e2e/lab.spec.ts` and `e2e/scaffold.spec.ts` were updated for `/` now being
-  a protected route (they assert the `/login` redirect instead of the old
-  unauthenticated `Home` heading).
+- **Playwright, static build** (`frontend/e2e/auth.spec.ts`): renders `/login`
+  and `/register` at mobile (390×844) and desktop (1440×900) viewports and
+  saves screenshots to `frontend/test-results/screenshots/` as review
+  evidence. No backend runs for this project (see `playwright.config.ts`),
+  so it only exercises rendering/layout — functional and full-stack
+  end-to-end coverage lives in Vitest/MSW and `frontend/e2e-auth/`
+  respectively. `e2e/lab.spec.ts` and `e2e/scaffold.spec.ts` were updated for
+  `/` now being a protected route (they assert the `/login` redirect instead
+  of the old unauthenticated `Home` heading).
+- **Playwright, full stack** (`frontend/e2e-auth/`): see "Full-stack E2E
+  verification" above.
 
 ## Verification (commands run)
 
@@ -108,10 +143,24 @@ npm run lint            # eslint . — clean
 npm run typecheck       # tsc -b --noEmit — clean
 npm run format:check    # prettier --check . — clean
 npm run test:coverage   # vitest run --coverage — 75 tests passed,
-                        # 93.88% stmts / 89.31% branch / 93.61% funcs / 95.44% lines
+                        # 94.11% stmts / 90.08% branch / 93.57% funcs / 95.15% lines
 npm run e2e             # playwright test — 8 passed, incl. mobile/desktop
                         # login + register screenshots
 ```
+
+Full-stack auth verification (`TSC-AUTH-003`, against the real Docker
+Compose stack — `docker compose -f docker-compose.yml -f
+docker-compose.dev.yml -f docker-compose.e2e.yml up`, then
+`npm run e2e:auth`):
+
+```bash
+npm run e2e:auth   # playwright test --config=playwright.auth.config.ts
+                   # 9/9 passed — run 3 consecutive times, all green
+```
+
+Backend suite re-verified in containers alongside this change (`make test`
+equivalent): 117 backend tests passed, 98% coverage; `ruff`/`black --check`/
+`mypy` all clean.
 
 Also verified inside the actual dev containers (`docker compose -f
 docker-compose.yml -f docker-compose.dev.yml run --rm frontend ...`), which
@@ -131,3 +180,7 @@ Pending: auth copy (form labels, hints, toasts), validation feedback wording,
 and the redirect UX (login → intended destination, register → login with
 pre-filled email, expired-session messaging) need human sign-off before this
 task is marked `Done`.
+
+`TSC-AUTH-003` (full-stack verification) has its own separate human review
+gate: a manual auth smoke test against the running stack, before that task
+is marked `Done`.
