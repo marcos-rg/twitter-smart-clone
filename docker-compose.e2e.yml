@@ -1,0 +1,21 @@
+name: twitter-smart-clone
+
+# Auth E2E overrides (TSC-AUTH-003). The Playwright auth suite
+# (`frontend/e2e-auth/`) exercises register/login/refresh/logout/duplicate/
+# invalid-credentials/reuse-detection from a single CI-runner (or developer
+# machine) IP in quick succession -- dozens of `/auth/*` calls well past the
+# production-realistic 10/min default (spec §10.3), which would otherwise
+# make the suite fail on rate-limit 429s rather than the behavior under
+# test. This file *only* relaxes that limit; every other setting (real
+# PostgreSQL, real Redis, real cookie/JWT handling) is unchanged.
+#
+# Usage: layer on top of the base + dev stack, e.g.
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml \
+#     -f docker-compose.e2e.yml up -d --build
+# (or `make e2e-auth`, which wires all three together). Never used by
+# `make up` / the default CI quality-gate jobs.
+
+services:
+  backend:
+    environment:
+      AUTH_RATE_LIMIT_PER_MINUTE: "1000"
