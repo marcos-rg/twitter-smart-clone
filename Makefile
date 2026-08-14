@@ -40,8 +40,10 @@ migrate: ## Apply database migrations.
 	$(COMPOSE) run --rm backend uv run alembic upgrade head
 
 e2e-auth: ## Run the Playwright auth E2E suite on the host against the live stack (starts/stops it).
-	$(COMPOSE_E2E) up -d --build
-	@echo "Waiting for services to report healthy..."; \
+	@set -eu; \
+	trap '$(COMPOSE_E2E) down -v' EXIT; \
+	$(COMPOSE_E2E) up -d --build; \
+	echo "Waiting for services to report healthy..."; \
 	for i in $$(seq 1 30); do \
 		statuses=$$($(COMPOSE_E2E) ps --format '{{.Service}} {{.State}} {{.Health}}'); \
 		echo "$$statuses"; \
@@ -51,6 +53,5 @@ e2e-auth: ## Run the Playwright auth E2E suite on the host against the live stac
 		fi; \
 		if [ "$$i" = "30" ]; then echo "Timed out waiting for services to become healthy." >&2; $(COMPOSE_E2E) logs; exit 1; fi; \
 		sleep 5; \
-	done
+	done; \
 	cd frontend && npm ci && npx playwright install --with-deps chromium && npm run e2e:auth
-	$(COMPOSE_E2E) down -v
