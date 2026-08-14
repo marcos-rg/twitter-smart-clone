@@ -32,11 +32,19 @@ describe('Profile (own)', () => {
           data: [
             {
               id: 'tweet-1',
-              author_id: testUser.id,
+              author: {
+                id: testUser.id,
+                username: testUser.username,
+                name: testUser.name,
+                avatar_key: testUser.avatar_key,
+              },
               content: 'Hello, world!',
               parent_tweet_id: null,
               like_count: 2,
               reply_count: 0,
+              liked_by_viewer: false,
+              media: [],
+              links: [],
               created_at: '2026-02-01T00:00:00Z',
             },
           ],
@@ -69,6 +77,56 @@ describe('Profile (own)', () => {
     await user.click(screen.getByText('Signed in as @ada'))
 
     expect(await screen.findByText('No tweets yet')).toBeInTheDocument()
+  })
+
+  it('shows a composer on the own profile that posts a tweet into the timeline without a refetch', async () => {
+    mockAuthenticatedSession()
+    let getTweetsCalls = 0
+    server.use(
+      http.get('*/api/v1/users/ada/tweets', () => {
+        getTweetsCalls += 1
+        return HttpResponse.json({ data: [], page: { next_cursor: null } })
+      }),
+      http.post('*/api/v1/tweets', async ({ request }) => {
+        const body = (await request.json()) as { content: string }
+        return HttpResponse.json(
+          {
+            id: 'tweet-fresh',
+            author: {
+              id: testUser.id,
+              username: testUser.username,
+              name: testUser.name,
+              avatar_key: testUser.avatar_key,
+            },
+            content: body.content.trim(),
+            parent_tweet_id: null,
+            like_count: 0,
+            reply_count: 0,
+            liked_by_viewer: false,
+            media: [],
+            links: [],
+            created_at: '2026-02-02T00:00:00Z',
+          },
+          { status: 201 },
+        )
+      }),
+    )
+    const user = userEvent.setup()
+    render(<App />)
+
+    await waitFor(() => expect(screen.getByText('Signed in as @ada')).toBeInTheDocument())
+    await user.click(screen.getByText('Signed in as @ada'))
+
+    expect(await screen.findByText('No tweets yet')).toBeInTheDocument()
+    const callsBeforePost = getTweetsCalls
+
+    await user.type(screen.getByLabelText("What's happening?"), 'Fresh from the composer')
+    await user.click(screen.getByRole('button', { name: 'Post' }))
+
+    expect(await screen.findByText('Fresh from the composer')).toBeInTheDocument()
+    expect(screen.queryByText('No tweets yet')).not.toBeInTheDocument()
+    // The timeline cache was updated directly — no additional GET fired.
+    expect(getTweetsCalls).toBe(callsBeforePost)
   })
 
   it('has no accessibility violations', async () => {

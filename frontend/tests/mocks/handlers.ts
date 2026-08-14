@@ -104,6 +104,54 @@ export const handlers = [
   http.get(`${API_BASE_URL}/api/v1/users/:username/following`, () =>
     HttpResponse.json({ data: [], page: { next_cursor: null } }),
   ),
+
+  // `/tweets/*` defaults (TSC-TWEET-002): creating a tweet/reply echoes a
+  // well-formed `TweetView` back (authored by `testUser`); getting/listing
+  // an unseeded tweet 404s / returns an empty page. Individual tests
+  // override these with `server.use(...)` for populated fixtures, replies,
+  // and error scenarios.
+  http.post(`${API_BASE_URL}/api/v1/tweets`, async ({ request }) => {
+    const body = (await request.json()) as {
+      content: string
+      parent_tweet_id?: string | null
+      media_keys?: string[]
+    }
+    return HttpResponse.json(
+      {
+        id: 'tweet-new',
+        author: {
+          id: testUser.id,
+          username: testUser.username,
+          name: testUser.name,
+          avatar_key: testUser.avatar_key,
+        },
+        content: body.content.trim(),
+        parent_tweet_id: body.parent_tweet_id ?? null,
+        like_count: 0,
+        reply_count: 0,
+        liked_by_viewer: false,
+        media: (body.media_keys ?? []).map((key, position) => ({
+          key,
+          content_type: 'image/png',
+          position,
+        })),
+        links: [],
+        created_at: '2026-02-01T00:00:00Z',
+      },
+      { status: 201 },
+    )
+  }),
+
+  http.get(`${API_BASE_URL}/api/v1/tweets/:tweetId`, () =>
+    HttpResponse.json(
+      { error: { code: 'not_found', message: 'Tweet not found.' } },
+      { status: 404 },
+    ),
+  ),
+
+  http.get(`${API_BASE_URL}/api/v1/tweets/:tweetId/replies`, () =>
+    HttpResponse.json({ data: [], page: { next_cursor: null } }),
+  ),
 ]
 
 export const testUser = {
