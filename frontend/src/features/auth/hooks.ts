@@ -55,29 +55,35 @@ export function useSessionBootstrap() {
   const ranRef = useRef(false)
 
   useEffect(() => {
+    // `ranRef` (not a cleanup-scoped `cancelled` flag) is what makes this
+    // idempotent under React 18 StrictMode's dev-only double effect
+    // invocation: the guard lives on the ref, which survives the simulated
+    // unmount/remount for the same component instance, so the second
+    // invocation is a no-op and the *original* bootstrap's promise chain is
+    // always the one whose result lands in the store. A previous version
+    // instead gated the terminal `setSession`/`clear` calls on a `cancelled`
+    // flag set by the effect's cleanup function -- but that cleanup runs
+    // (marking the in-flight bootstrap "cancelled") before the network
+    // round trip resolves, so the store was left stuck in `loading` forever
+    // in real browsers (caught by `TSC-AUTH-003`'s E2E suite; the Vitest/RTL
+    // suite doesn't render under StrictMode, so it never hit this path).
     if (ranRef.current) return
     ranRef.current = true
 
-    let cancelled = false
     setLoading()
 
     async function bootstrap() {
       try {
         const tokenData = await authApi.refresh()
-        if (cancelled) return
         useAuthStore.getState().setAccessToken(tokenData.access_token)
         const user = await authApi.getCurrentUser()
-        if (cancelled) return
         setSession(tokenData.access_token, user)
       } catch {
-        if (!cancelled) clear()
+        clear()
       }
     }
 
     void bootstrap()
-    return () => {
-      cancelled = true
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 }
