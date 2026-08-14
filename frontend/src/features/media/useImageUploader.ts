@@ -21,6 +21,7 @@ export interface UseImageUploaderOptions {
 
 function describeUploadError(error: unknown): string {
   if (error instanceof ApiError) return error.message
+  if (error instanceof Error && error.message) return error.message
   return 'Upload failed. Check your connection and try again.'
 }
 
