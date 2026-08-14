@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 12 |
-| In Progress | 1 |
-| To Do | 28 |
+| Done | 14 |
+| In Progress | 0 |
+| To Do | 27 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -374,7 +374,7 @@ human-review cadence is:
 <a id="tsc-user-003"></a>
 ### TSC-USER-003 - Verify profiles and search end to end
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Validate profile viewing/editing and all search modes against the
   real API and database.
 - **Dependencies:** [TSC-USER-001](#tsc-user-001),
@@ -393,7 +393,7 @@ human-review cadence is:
 <a id="tsc-notif-001"></a>
 ### TSC-NOTIF-001 - Build notification persistence and delivery APIs
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Build the reusable notification resource before social actions
   depend on it: transactional persistence, list/read APIs, and post-commit Redis
   publication of the event envelope. Trigger wiring is completed by follow, reply, and
