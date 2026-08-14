@@ -16,6 +16,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import Settings
 from app.core.errors import AppError
+from app.core.outbox import run_post_commit_callbacks
 from app.core.resources import AppResources
 from app.core.security import InvalidTokenError, decode_access_token
 from app.models.user import User
@@ -60,18 +61,27 @@ async def get_db_session(
     raising, and that mutation must survive the error response. Only a truly
     unexpected exception (an actual bug, surfaced as a `500`) rolls back, so
     a half-finished write from a genuine crash is never persisted.
+
+    Every branch that commits also drains this session's post-commit outbox
+    (`app.core.outbox`) immediately afterward, so any side effect a service
+    queued (e.g. the notification Redis publisher) fires exactly once, only
+    once the transaction it depends on has actually landed. The rollback
+    branch does not drain it: a queued callback for a transaction that never
+    committed simply never runs.
     """
     async with resources.db_sessionmaker() as session:
         try:
             yield session
         except (AppError, StarletteHTTPException):
             await session.commit()
+            await run_post_commit_callbacks(session)
             raise
         except Exception:
             await session.rollback()
             raise
         else:
             await session.commit()
+            await run_post_commit_callbacks(session)
 
 
 def get_redis(resources: AppResources = Depends(get_resources)) -> Redis:
