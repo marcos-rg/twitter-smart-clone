@@ -50,25 +50,25 @@ async def check_rate_limit(
     """Raise `RateLimitExceeded` if `key` has made >= `limit` requests in the
     trailing `window_seconds`; otherwise record this request and return.
     """
-    now = time.time()
-    window_start = now - window_seconds
-    redis_key = f"ratelimit:{key}"
+now = time.time()
+window_start = now - window_seconds
+redis_key = f"ratelimit:{key}"
+member = f"{now}:{uuid.uuid4()}"
 
-    async with redis.pipeline(transaction=True) as pipe:
-        pipe.zremrangebyscore(redis_key, 0, window_start)
-        pipe.zcard(redis_key)
-        results = await pipe.execute()
-    current_count = int(results[1])
+async with redis.pipeline(transaction=True) as pipe:
+    pipe.zremrangebyscore(redis_key, 0, window_start)
+    pipe.zadd(redis_key, {member: now})
+    pipe.zcard(redis_key)
+    pipe.expire(redis_key, window_seconds)
+    results = await pipe.execute()
+current_count = int(results[2])
 
-    if current_count >= limit:
-        oldest = await redis.zrange(redis_key, 0, 0, withscores=True)
-        retry_after = window_seconds
-        if oldest:
-            oldest_score = float(oldest[0][1])
-            retry_after = max(1, int(oldest_score + window_seconds - now))
-        raise RateLimitExceeded(retry_after)
-
-    async with redis.pipeline(transaction=True) as pipe:
-        pipe.zadd(redis_key, {f"{now}:{uuid.uuid4()}": now})
-        pipe.expire(redis_key, window_seconds)
-        await pipe.execute()
+if current_count > limit:
+    # Remove this request's marker so we don't permanently exceed the limit.
+    await redis.zrem(redis_key, member)
+    oldest = await redis.zrange(redis_key, 0, 0, withscores=True)
+    retry_after = window_seconds
+    if oldest:
+        oldest_score = float(oldest[0][1])
+        retry_after = max(1, int(oldest_score + window_seconds - now))
+    raise RateLimitExceeded(retry_after)
