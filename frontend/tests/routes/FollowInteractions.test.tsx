@@ -157,8 +157,23 @@ describe('FollowButton', () => {
 
   it('has no accessibility violations on an unfollowed profile', async () => {
     mockAuthenticatedSession()
-    mockBobProfile({ is_following: false })
-    window.history.pushState({}, '', '/profile/bob')
+    server.use(
+      http.get('*/api/v1/users/zoe', () =>
+        HttpResponse.json({
+          ...bob,
+          id: 'user-99',
+          username: 'zoe',
+          name: 'Zoe Zero',
+          followers_count: 4,
+          following_count: 2,
+          is_following: false,
+        }),
+      ),
+      http.get('*/api/v1/users/zoe/tweets', () =>
+        HttpResponse.json({ data: [], page: { next_cursor: null } }),
+      ),
+    )
+    window.history.pushState({}, '', '/profile/zoe')
     const { container } = render(<App />)
 
     await screen.findByRole('button', { name: 'Follow' })
@@ -167,6 +182,11 @@ describe('FollowButton', () => {
 })
 
 describe('Followers / Following lists', () => {
+  beforeEach(async () => {
+    await queryClient.cancelQueries()
+    queryClient.clear()
+  })
+
   const followersPage1 = [
     { id: 'user-10', name: 'Grace Hopper', username: 'ghopper', bio: null, avatar_key: null },
     { id: 'user-11', name: 'Alan Turing', username: 'turing', bio: null, avatar_key: null },
