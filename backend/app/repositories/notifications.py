@@ -8,6 +8,7 @@ covers the (small) unread subset.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import func
@@ -78,14 +79,51 @@ class NotificationRepository(BaseRepository[Notification]):
         )
         return int(result.one())
 
-    async def mark_all_read(self, recipient_id: UUID) -> None:
+    async def mark_all_read(self, recipient_id: UUID) -> int:
+        """Mark every currently-unread notification for `recipient_id` as
+        read. Idempotent: only rows with `is_read = false` are selected, so
+        a second call matches zero rows and returns `0` — it never
+        "unreads" or re-touches an already-read row.
+        """
         result = await self.session.exec(
             select(Notification).where(
                 Notification.recipient_id == recipient_id,
                 Notification.is_read.is_(False),  # type: ignore[attr-defined]
             )
         )
-        for notification in result.all():
+        rows = result.all()
+        for notification in rows:
             notification.is_read = True
             self.session.add(notification)
         await self.session.flush()
+        return len(rows)
+
+    async def mark_selected_read(
+        self, recipient_id: UUID, notification_ids: Sequence[UUID]
+    ) -> int:
+        """Mark the given notification ids as read, scoped to
+        `recipient_id`.
+
+        Ids that don't exist, or belong to a different recipient, are
+        silently excluded by the `WHERE` clause rather than raising —
+        callers can only ever affect their own notifications, and a
+        404/403 here would let a client probe whether some other user's
+        notification id exists. Only rows with `is_read = false` are
+        matched, so marking the same id(s) twice updates them exactly once:
+        the second call matches zero rows for ids already marked read.
+        """
+        if not notification_ids:
+            return 0
+        result = await self.session.exec(
+            select(Notification).where(
+                Notification.recipient_id == recipient_id,
+                Notification.id.in_(notification_ids),  # type: ignore[attr-defined]
+                Notification.is_read.is_(False),  # type: ignore[attr-defined]
+            )
+        )
+        rows = result.all()
+        for notification in rows:
+            notification.is_read = True
+            self.session.add(notification)
+        await self.session.flush()
+        return len(rows)
