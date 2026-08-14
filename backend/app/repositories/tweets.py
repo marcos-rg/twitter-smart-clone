@@ -8,6 +8,7 @@ tweets (`(author_id, created_at desc)`), replies to one tweet
 
 from __future__ import annotations
 
+from typing import Any, cast
 from uuid import UUID
 
 from sqlalchemy import func
@@ -75,11 +76,12 @@ class TweetRepository(BaseRepository[Tweet]):
         """Bump `reply_count` on the parent tweet (called in the same
         transaction as the reply insert, spec §5.3).
         """
+        tweet_table = cast(Any, Tweet).__table__
         await self.session.exec(
-            Tweet.__table__.update()
+            tweet_table.update()
             .where(Tweet.id == tweet_id)
             .values(reply_count=Tweet.reply_count + 1)
-        )  # type: ignore[call-overload]
+        )
         await self.session.flush()
 
     async def increment_like_count(self, tweet_id: UUID, *, delta: int = 1) -> None:
