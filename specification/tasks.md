@@ -47,8 +47,8 @@ and the relevant living documentation in the same pull request.
 | Status | Count |
 |---|---:|
 | Done | 19 |
-| In Progress | 0 |
-| To Do | 22 |
+| In Progress | 1 |
+| To Do | 21 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -541,7 +541,7 @@ human-review cadence is:
 <a id="tsc-media-002"></a>
 ### TSC-MEDIA-002 - Build and validate reusable image-upload UI
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Build an isolated avatar/tweet image picker and uploader before
   embedding it in final composer/profile screens.
 - **Dependencies:** [TSC-MEDIA-001](#tsc-media-001),

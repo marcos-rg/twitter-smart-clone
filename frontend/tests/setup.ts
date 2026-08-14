@@ -28,6 +28,15 @@ afterEach(() => {
   })
 })
 
+// jsdom doesn't implement the Blob URL registry, so `useImageUploader`
+// (TSC-MEDIA-002) can't call `URL.createObjectURL`/`revokeObjectURL`
+// directly in tests. A minimal counter-based fake is enough: tests only need
+// stable, distinct strings and a way to assert `revokeObjectURL` was called
+// for cleanup, not real blob resolution.
+let objectUrlCounter = 0
+URL.createObjectURL = (() => `blob:mock-${objectUrlCounter++}`) as typeof URL.createObjectURL
+URL.revokeObjectURL = (() => {}) as typeof URL.revokeObjectURL
+
 // `App` renders a real `BrowserRouter`, which reads `window.location` at
 // mount. jsdom's `window` (and therefore its history) is shared across every
 // `it()` in a test file, so without this a test that navigates (e.g. to

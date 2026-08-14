@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import {
   Avatar,
   Button,
@@ -12,6 +12,7 @@ import {
   useToast,
 } from '../components/ui'
 import { TweetCard, TweetCardSkeleton } from '../components/tweet/TweetCard'
+import { AvatarUploader, ImageUploader, createFakeMediaUploadAdapter } from '../features/media'
 
 const LONG_CONTENT =
   'This is an intentionally long tweet to verify that long content wraps ' +
@@ -50,6 +51,11 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 export function Lab() {
   const [modalOpen, setModalOpen] = useState(false)
   const { toast } = useToast()
+  // Stable fake adapter (no network calls): simulates presign/upload/confirm
+  // latency and progress, and deterministically fails any file named
+  // `fail-*` so the partial-failure state is reproducible for review and
+  // screenshots (TSC-MEDIA-002).
+  const fakeAdapter = useMemo(() => createFakeMediaUploadAdapter(), [])
 
   return (
     <div>
@@ -106,6 +112,20 @@ export function Lab() {
           <Avatar name="Grace Hopper" size="md" />
           <Avatar name="Alan Turing" size="lg" />
           <Avatar name="Broken Image" src="/does-not-exist.png" />
+        </Row>
+      </Section>
+
+      <Section title="Image uploader">
+        <Row label="Tweet images (add a file named e.g. fail-cat.png to see retry)">
+          <ImageUploader
+            label="Tweet images"
+            purpose="tweet_image"
+            maxFiles={4}
+            adapter={fakeAdapter}
+          />
+        </Row>
+        <Row label="Avatar">
+          <AvatarUploader name="Ada Lovelace" adapter={fakeAdapter} />
         </Row>
       </Section>
 

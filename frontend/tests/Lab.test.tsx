@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { axe } from 'jest-axe'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
@@ -7,12 +8,15 @@ import { ToastProvider } from '../src/components/ui'
 import { Lab } from '../src/routes/Lab'
 
 function setup() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <ToastProvider>
-      <MemoryRouter>
-        <Lab />
-      </MemoryRouter>
-    </ToastProvider>,
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <MemoryRouter>
+          <Lab />
+        </MemoryRouter>
+      </ToastProvider>
+    </QueryClientProvider>,
   )
 }
 

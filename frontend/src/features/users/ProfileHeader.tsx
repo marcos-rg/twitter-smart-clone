@@ -1,14 +1,15 @@
 import { Link } from 'react-router-dom'
 import { Avatar, Button } from '../../components/ui'
+import { resolveMediaUrl } from '../../api/media'
 import { FollowButton } from '../follows/FollowButton'
 
 export interface ProfileHeaderProps {
   name: string
   username: string
   bio: string | null
-  /** Object key for an uploaded avatar. Avatar binary upload/serving lands in
-   * TSC-MEDIA-001/002 — until there's a URL-resolution helper for it, the
-   * header always falls back to initials rather than guessing a URL shape. */
+  /** Object key for an uploaded avatar, resolved to a URL via
+   * `resolveMediaUrl` (TSC-MEDIA-002). `Avatar` falls back to initials
+   * itself if this is `null` or the image fails to load. */
   avatarKey: string | null
   createdAt: string
   isOwnProfile: boolean
@@ -41,11 +42,10 @@ export function ProfileHeader({
   followingCount,
   isFollowing,
 }: ProfileHeaderProps) {
-  void avatarKey
   return (
     <header className="flex flex-col gap-4 border-b border-border px-4 py-6">
       <div className="flex items-start justify-between gap-4">
-        <Avatar name={name} size="lg" />
+        <Avatar name={name} src={resolveMediaUrl(avatarKey)} size="lg" />
         {isOwnProfile ? (
           <Button variant="outline" size="sm" onClick={onEdit}>
             Edit profile

@@ -152,3 +152,28 @@ export interface FollowListResponse {
   data: FollowUserItem[]
   page: PageInfo
 }
+
+/**
+ * `/media/*` presign/confirm and `/users/me/avatar` types (spec §6.3, §8.4,
+ * TSC-MEDIA-001/002).
+ */
+
+export type MediaPurpose = 'avatar' | 'tweet_image'
+
+export interface PresignFileRequest {
+  content_type: string
+  size_bytes: number
+}
+
+export interface PresignedUpload {
+  key: string
+  upload_url: string
+  content_type: string
+  expires_at: string
+}
+
+export interface ConfirmedMedia {
+  key: string
+  content_type: string
+  size_bytes: number
+}

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Button, Input, Textarea, useToast } from '../../components/ui'
 import { ApiError } from '../../api/client'
+import { AvatarUploader } from '../media'
 import { describeUsersError, useUpdateProfile } from './hooks'
 import { validateBio, validateEmail, validateName, validateUsername } from './validation'
 
@@ -82,6 +83,7 @@ export function ProfileEditForm({ initialValues, onSuccess, onCancel }: ProfileE
 
   return (
     <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <AvatarUploader name={name || initialValues.name} />
       <Input
         label="Name"
         autoComplete="name"
