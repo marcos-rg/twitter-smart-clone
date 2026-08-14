@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, cast
 from uuid import UUID
@@ -83,6 +84,16 @@ class UserRepository(BaseRepository[User]):
         """Case-insensitive lookup by email."""
         result = await self.session.exec(select(User).where(User.email == email))
         return result.first()
+
+    async def get_many(self, ids: Sequence[UUID]) -> list[User]:
+        """Bulk fetch by primary key (order not guaranteed). Used to
+        batch-load actor summaries for a page of results — e.g. notifications
+        — instead of one query per row.
+        """
+        if not ids:
+            return []
+        result = await self.session.exec(select(User).where(User.id.in_(ids)))  # type: ignore[attr-defined]
+        return list(result.all())
 
     async def search_exact(
         self, query: str, *, cursor: UserSearchCursor | None, limit: int | None

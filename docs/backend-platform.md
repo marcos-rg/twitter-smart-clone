@@ -168,6 +168,21 @@ Requests from an origin not in the configured list receive no
 `Access-Control-Allow-*` headers, so browsers block the response from
 reading it.
 
+## Post-commit outbox (`app.core.outbox`)
+
+Added by `TSC-NOTIF-001` as a generic extension to `get_db_session`, not a
+notification-specific mechanism. `get_db_session` commits automatically in
+dependency teardown, after the endpoint/service call has already returned;
+a service that needs to trigger a side effect (e.g. a Redis `PUBLISH`) only
+once that commit has actually landed calls `queue_post_commit(session,
+callback)` instead of firing it eagerly. `get_db_session` calls
+`run_post_commit_callbacks(session)` immediately after every branch that
+commits (the normal success path and the handled-`AppError` path); the
+rollback branch (unexpected exception) never drains the queue, so a queued
+callback for a transaction that never committed simply never runs. See
+[notifications-backend.md](./notifications-backend.md) for the first
+consumer (the notification Redis publisher) and its test evidence.
+
 ## Celery (`app.workers.celery_app`)
 
 `celery_app` is configured with the Redis broker/result backend (JSON
