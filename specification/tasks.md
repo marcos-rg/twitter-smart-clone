@@ -46,8 +46,8 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 27 |
-| In Progress | 1 |
+| Done | 28 |
+| In Progress | 0 |
 | To Do | 13 |
 
 The counts above reflect the repository at the time this plan was created: requirements
@@ -729,7 +729,7 @@ human-review cadence is:
 <a id="tsc-like-002"></a>
 ### TSC-LIKE-002 - Implement optimistic like interactions
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Add accessible like/unlike controls to tweet cards and details with
   optimistic count/state updates, animation, and reliable rollback.
 - **Dependencies:** [TSC-LIKE-001](#tsc-like-001),
