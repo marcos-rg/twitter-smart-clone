@@ -25,6 +25,9 @@ const PROFILE = {
   bio: 'Mathematician and writer. Building the analytical engine.',
   avatar_key: null,
   created_at: '2025-03-01T00:00:00Z',
+  followers_count: 5,
+  following_count: 2,
+  is_following: false,
 }
 
 const TWEETS = [
@@ -57,6 +60,24 @@ const SEARCH_RESULTS = [
     avatar_key: null,
   },
   { id: 'user-3', name: 'Alan Turing', username: 'turing', bio: 'Codebreaker.', avatar_key: null },
+]
+
+const FOLLOWERS = [
+  {
+    id: 'user-2',
+    name: 'Charles Babbage',
+    username: 'babbage',
+    bio: 'Inventor.',
+    avatar_key: null,
+  },
+  { id: 'user-3', name: 'Alan Turing', username: 'turing', bio: 'Codebreaker.', avatar_key: null },
+  {
+    id: 'user-4',
+    name: 'Grace Hopper',
+    username: 'ghopper',
+    bio: 'Compiler pioneer.',
+    avatar_key: null,
+  },
 ]
 
 async function mockAuthenticatedApi(page: Page) {
@@ -93,6 +114,20 @@ async function mockAuthenticatedApi(page: Page) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ data: SEARCH_RESULTS, page: { next_cursor: null } }),
+    }),
+  )
+  await page.route('**/api/v1/users/ada/followers*', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: FOLLOWERS, page: { next_cursor: null } }),
+    }),
+  )
+  await page.route('**/api/v1/users/ada/following*', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: FOLLOWERS.slice(0, 1), page: { next_cursor: null } }),
     }),
   )
 }
@@ -159,6 +194,26 @@ for (const bp of breakpoints) {
 
     await page.screenshot({
       path: `test-results/screenshots/search-${bp.name}.png`,
+      fullPage: true,
+    })
+  })
+
+  test(`followers screen renders at ${bp.name} width (${bp.width}px) without horizontal overflow`, async ({
+    page,
+  }) => {
+    await mockAuthenticatedApi(page)
+    await page.setViewportSize({ width: bp.width, height: bp.height })
+    await page.goto('/profile/ada/followers')
+
+    await expect(page.getByRole('heading', { name: 'Followers' })).toBeVisible()
+    await expect(page.getByText('Charles Babbage')).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    await expectNoHorizontalOverflow(page)
+
+    await page.screenshot({
+      path: `test-results/screenshots/followers-${bp.name}.png`,
       fullPage: true,
     })
   })
