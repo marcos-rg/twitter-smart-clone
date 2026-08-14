@@ -77,6 +77,14 @@ class Settings(BaseSettings):
     # --- Readiness -----------------------------------------------------------------
     readiness_check_timeout_seconds: float = 2.0
 
+    # --- WebSocket / realtime (spec §4.2) -------------------------------------------
+    #: How often the server sends an application-level `{"type": "ping"}` frame to
+    #: every open connection, and how often the reaper sweeps for stale ones.
+    ws_heartbeat_interval_seconds: float = 20.0
+    #: A connection with no inbound activity (client message, including a `pong`)
+    #: for longer than this is considered dead and is closed + deregistered.
+    ws_heartbeat_timeout_seconds: float = 45.0
+
     @property
     def effective_celery_broker_url(self) -> str:
         """Celery broker URL, defaulting to the shared Redis instance."""
