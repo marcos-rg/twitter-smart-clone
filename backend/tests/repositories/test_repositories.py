@@ -102,7 +102,55 @@ async def test_notification_unread_count_and_mark_all_read(db_session: AsyncSess
         )
 
     assert await notifications_repo.count_unread(recipient.id) == 3
-    await notifications_repo.mark_all_read(recipient.id)
+    marked = await notifications_repo.mark_all_read(recipient.id)
+    assert marked == 3
+    assert await notifications_repo.count_unread(recipient.id) == 0
+
+    # Idempotent: a second call matches nothing already-read, so it's a no-op.
+    assert await notifications_repo.mark_all_read(recipient.id) == 0
+    assert await notifications_repo.count_unread(recipient.id) == 0
+
+
+async def test_notification_mark_selected_read_is_scoped_and_idempotent(
+    db_session: AsyncSession,
+) -> None:
+    recipient = await _make_user(db_session, "notif_selected_recipient")
+    other_recipient = await _make_user(db_session, "notif_selected_other")
+    actor = await _make_user(db_session, "notif_selected_actor")
+    notifications_repo = NotificationRepository(db_session)
+
+    mine_1 = await notifications_repo.add(
+        notifications_repo.model(
+            recipient_id=recipient.id, actor_id=actor.id, type=NotificationType.LIKE
+        )
+    )
+    mine_2 = await notifications_repo.add(
+        notifications_repo.model(
+            recipient_id=recipient.id, actor_id=actor.id, type=NotificationType.REPLY
+        )
+    )
+    someone_elses = await notifications_repo.add(
+        notifications_repo.model(
+            recipient_id=other_recipient.id, actor_id=actor.id, type=NotificationType.FOLLOW
+        )
+    )
+
+    # Marking a mix of "mine" + "someone else's" id only affects mine.
+    marked = await notifications_repo.mark_selected_read(
+        recipient.id, [mine_1.id, someone_elses.id]
+    )
+    assert marked == 1
+    assert await notifications_repo.count_unread(recipient.id) == 1  # mine_2 still unread
+    assert await notifications_repo.count_unread(other_recipient.id) == 1  # untouched
+
+    # Idempotent: marking the same id again matches nothing new.
+    assert await notifications_repo.mark_selected_read(recipient.id, [mine_1.id]) == 0
+
+    # Empty id list is a no-op, not an error.
+    assert await notifications_repo.mark_selected_read(recipient.id, []) == 0
+
+    marked_remaining = await notifications_repo.mark_selected_read(recipient.id, [mine_2.id])
+    assert marked_remaining == 1
     assert await notifications_repo.count_unread(recipient.id) == 0
 
 
