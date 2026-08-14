@@ -47,8 +47,8 @@ and the relevant living documentation in the same pull request.
 | Status | Count |
 |---|---:|
 | Done | 12 |
-| In Progress | 0 |
-| To Do | 29 |
+| In Progress | 1 |
+| To Do | 28 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -393,7 +393,7 @@ human-review cadence is:
 <a id="tsc-notif-001"></a>
 ### TSC-NOTIF-001 - Build notification persistence and delivery APIs
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Build the reusable notification resource before social actions
   depend on it: transactional persistence, list/read APIs, and post-commit Redis
   publication of the event envelope. Trigger wiring is completed by follow, reply, and
