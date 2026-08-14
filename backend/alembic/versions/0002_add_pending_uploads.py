@@ -41,15 +41,11 @@ def upgrade() -> None:
         sa.Column("s3_key", sa.Text(), nullable=False),
         sa.Column("content_type", sa.Text(), nullable=False),
         sa.Column("size_bytes", sa.BigInteger(), nullable=False),
-        sa.Column(
-            "status", pending_upload_status, nullable=False, server_default="pending"
-        ),
+        sa.Column("status", pending_upload_status, nullable=False, server_default="pending"),
         sa.Column("presign_expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("confirmed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["users.id"], name="fk_pending_uploads_user_id_users"
-        ),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name="fk_pending_uploads_user_id_users"),
         sa.UniqueConstraint("s3_key", name="uq_pending_uploads_s3_key"),
     )
     op.create_index("ix_pending_uploads_user_id", "pending_uploads", ["user_id"])
