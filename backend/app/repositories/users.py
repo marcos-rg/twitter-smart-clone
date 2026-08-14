@@ -93,12 +93,15 @@ class UserRepository(BaseRepository[User]):
             )
         )
         if cursor is not None:
-            stmt = stmt.where(
-                or_(
-                    User.username > cursor.username,  # type: ignore[operator]
-                    and_(User.username == cursor.username, User.id > cursor.id),  # type: ignore[operator]
+            if cursor.username.casefold() == query.casefold():
+                stmt = stmt.where(User.username != query)
+            else:
+                stmt = stmt.where(
+                    or_(
+                        User.username > cursor.username,  # type: ignore[operator]
+                        and_(User.username == cursor.username, User.id > cursor.id),  # type: ignore[operator]
+                    )
                 )
-            )
         stmt = stmt.limit(limit + 1)
         result = await self.session.exec(stmt)
         users = list(result.all())
