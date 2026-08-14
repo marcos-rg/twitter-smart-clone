@@ -186,22 +186,44 @@ export function Lab() {
       <Section title="Tweet card">
         <div className="rounded-card border border-border">
           <TweetCard
-            authorName="Ada Lovelace"
-            authorHandle="ada"
-            timestamp="2026-08-13T14:00:00Z"
-            content="Just shipped the design system. Tokens, focus styles, and reduced-motion support all in."
-            replyCount={12}
-            repostCount={34}
-            likeCount={156}
+            tweet={{
+              id: 'lab-tweet-1',
+              author: { id: 'lab-user-1', name: 'Ada Lovelace', username: 'ada', avatar_key: null },
+              content:
+                'Just shipped the design system. Tokens, focus styles, and reduced-motion support all in.',
+              parent_tweet_id: null,
+              like_count: 156,
+              reply_count: 12,
+              liked_by_viewer: true,
+              media: [],
+              links: [],
+              created_at: '2026-08-13T14:00:00Z',
+            }}
           />
           <TweetCard
-            authorName="Long Content Author With A Very Long Display Name"
-            authorHandle="averylonghandlethatestswrapping"
-            timestamp="2026-08-13T13:00:00Z"
-            content={LONG_CONTENT}
-            replyCount={0}
-            repostCount={0}
-            likeCount={0}
+            tweet={{
+              id: 'lab-tweet-2',
+              author: {
+                id: 'lab-user-2',
+                name: 'Long Content Author With A Very Long Display Name',
+                username: 'averylonghandlethatestswrapping',
+                avatar_key: null,
+              },
+              content: LONG_CONTENT,
+              parent_tweet_id: null,
+              like_count: 0,
+              reply_count: 0,
+              liked_by_viewer: false,
+              media: [],
+              links: [
+                {
+                  url: 'https://example.com/a-very-long-url/that/keeps/going/and/going/without/spaces/to/test/word-breaking',
+                  start: LONG_CONTENT.indexOf('https://'),
+                  end: LONG_CONTENT.length,
+                },
+              ],
+              created_at: '2026-08-13T13:00:00Z',
+            }}
           />
           <TweetCardSkeleton />
         </div>

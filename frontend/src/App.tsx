@@ -12,6 +12,7 @@ import { Profile } from './routes/Profile'
 import { ProfileEdit } from './routes/ProfileEdit'
 import { Register } from './routes/Register'
 import { Search } from './routes/Search'
+import { TweetDetail } from './routes/TweetDetail'
 import { ProtectedRoute, PublicOnlyRoute } from './routes/guards/RouteGuards'
 
 export const queryClient = new QueryClient({
@@ -31,11 +32,12 @@ function SessionBootstrap({ children }: { children: import('react').ReactNode })
  * `/lab` is the in-app component interaction lab (TSC-UX-001); `/login` and
  * `/register` are public-only (TSC-AUTH-002); `/`, `/search`,
  * `/profile/:username`, `/profile/:username/edit`, `/profile/:username/followers`,
- * and `/profile/:username/following` require an authenticated session
- * (`/profile/:username/edit` further redirects to the read-only profile
- * unless `:username` is the signed-in user — TSC-USER-002; the followers/
- * following routes are the follow/social-list slice — TSC-SOC-002).
- * Further feature routes are added by later tasks.
+ * `/profile/:username/following`, and `/tweet/:tweetId` require an
+ * authenticated session (`/profile/:username/edit` further redirects to the
+ * read-only profile unless `:username` is the signed-in user — TSC-USER-002;
+ * the followers/following routes are the follow/social-list slice —
+ * TSC-SOC-002; `/tweet/:tweetId` is the tweet-detail/reply screen —
+ * TSC-TWEET-002). Further feature routes are added by later tasks.
  */
 function App() {
   return (
@@ -106,6 +108,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/tweet/:tweetId"
+                  element={
+                    <ProtectedRoute>
+                      <TweetDetail />
                     </ProtectedRoute>
                   }
                 />

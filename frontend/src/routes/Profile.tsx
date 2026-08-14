@@ -3,6 +3,7 @@ import { Button, EmptyState, ErrorState, Skeleton } from '../components/ui'
 import { TweetCard, TweetCardSkeleton } from '../components/tweet/TweetCard'
 import { ProfileHeader } from '../features/users/ProfileHeader'
 import { describeUsersError, useProfile, useUserTweets } from '../features/users/hooks'
+import { TweetComposer } from '../features/tweets/TweetComposer'
 import { useAuthStore } from '../stores/auth-store'
 
 /**
@@ -63,6 +64,8 @@ export function Profile() {
         isFollowing={profile.data.is_following}
       />
 
+      {isOwnProfile ? <TweetComposer profileUsername={profile.data.username} /> : null}
+
       <div>
         {tweets.isLoading ? (
           <>
@@ -92,15 +95,7 @@ export function Profile() {
         ) : (
           <>
             {items.map((tweet) => (
-              <TweetCard
-                key={tweet.id}
-                authorName={profile.data.name}
-                authorHandle={profile.data.username}
-                timestamp={tweet.created_at}
-                content={tweet.content}
-                likeCount={tweet.like_count}
-                replyCount={tweet.reply_count}
-              />
+              <TweetCard key={tweet.id} tweet={tweet} />
             ))}
             {tweets.hasNextPage ? (
               <div className="flex justify-center p-4">

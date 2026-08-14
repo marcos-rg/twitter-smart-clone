@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 21 |
+| Done | 22 |
 | In Progress | 0 |
-| To Do | 20 |
+| To Do | 19 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -594,7 +594,7 @@ human-review cadence is:
 <a id="tsc-tweet-002"></a>
 ### TSC-TWEET-002 - Implement tweet composer, cards, detail, replies, and timelines
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Build the primary tweet UI using approved components and media
   upload, including profile timelines and tweet detail with flat replies.
 - **Dependencies:** [TSC-TWEET-001](#tsc-tweet-001),

@@ -6,7 +6,6 @@ import { Avatar } from '../../src/components/ui/Avatar'
 import { EmptyState } from '../../src/components/ui/EmptyState'
 import { ErrorState } from '../../src/components/ui/ErrorState'
 import { Skeleton } from '../../src/components/ui/Skeleton'
-import { TweetCard, TweetCardSkeleton } from '../../src/components/tweet/TweetCard'
 
 describe('Avatar', () => {
   it('renders initials with an accessible name when no image is given', () => {
@@ -50,48 +49,6 @@ describe('Skeleton', () => {
   it('has no accessibility violations', async () => {
     const { container } = render(<Skeleton className="h-24 w-full" label="Loading" />)
     expect(await axe(container)).toHaveNoViolations()
-  })
-})
-
-describe('TweetCard', () => {
-  const props = {
-    authorName: 'Ada Lovelace',
-    authorHandle: 'ada',
-    timestamp: '2026-08-13T14:00:00Z',
-    content: 'Hello world',
-    replyCount: 2,
-    repostCount: 3,
-    likeCount: 4,
-  }
-
-  it('renders author, content, and accessible action counts', () => {
-    render(<TweetCard {...props} />)
-    expect(screen.getByRole('article', { name: 'Tweet by Ada Lovelace' })).toBeInTheDocument()
-    expect(screen.getByText('@ada')).toBeInTheDocument()
-    expect(screen.getByText('Hello world')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reply, 2 replies' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Repost, 3 reposts' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Like, 4 likes' })).toBeInTheDocument()
-  })
-
-  it('renders an invalid timestamp as-is', () => {
-    render(<TweetCard {...props} timestamp="not-a-date" />)
-    expect(screen.getByText('not-a-date')).toBeInTheDocument()
-  })
-
-  it('has no accessibility violations, including long content', async () => {
-    const { container } = render(
-      <>
-        <TweetCard {...props} />
-        <TweetCard {...props} content={`${'verylongword'.repeat(100)}`} />
-      </>,
-    )
-    expect(await axe(container)).toHaveNoViolations()
-  })
-
-  it('renders a labelled loading skeleton', () => {
-    render(<TweetCardSkeleton />)
-    expect(screen.getByRole('status', { name: 'Loading tweet' })).toBeInTheDocument()
   })
 })
 

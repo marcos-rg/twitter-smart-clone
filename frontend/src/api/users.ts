@@ -1,11 +1,11 @@
 import { request } from './client'
 import type {
   SearchMode,
+  TweetListResponse,
   UserPrivateProfile,
   UserProfileUpdateRequest,
   UserPublicProfile,
   UserSearchResponse,
-  UserTimelineResponse,
 } from './types'
 
 const BASE = '/api/v1/users'
@@ -32,12 +32,12 @@ export interface CursorPageParams {
 export function getUserTweets(
   username: string,
   params: CursorPageParams = {},
-): Promise<UserTimelineResponse> {
+): Promise<TweetListResponse> {
   const query = new URLSearchParams()
   if (params.cursor) query.set('cursor', params.cursor)
   if (params.limit) query.set('limit', String(params.limit))
   const qs = query.toString()
-  return request<UserTimelineResponse>(
+  return request<TweetListResponse>(
     `${BASE}/${encodeURIComponent(username)}/tweets${qs ? `?${qs}` : ''}`,
   )
 }

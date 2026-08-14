@@ -30,23 +30,36 @@ const PROFILE = {
   is_following: false,
 }
 
+const TWEET_AUTHOR = {
+  id: PROFILE.id,
+  username: PROFILE.username,
+  name: PROFILE.name,
+  avatar_key: PROFILE.avatar_key,
+}
+
 const TWEETS = [
   {
     id: 'tweet-1',
-    author_id: PROFILE.id,
+    author: TWEET_AUTHOR,
     content: 'Just published a new paper on computational methods.',
     parent_tweet_id: null,
     like_count: 12,
     reply_count: 3,
+    liked_by_viewer: false,
+    media: [],
+    links: [],
     created_at: '2026-01-15T10:00:00Z',
   },
   {
     id: 'tweet-2',
-    author_id: PROFILE.id,
+    author: TWEET_AUTHOR,
     content: 'Working through a long chain of mechanical calculation today — notes to follow.',
     parent_tweet_id: null,
     like_count: 4,
     reply_count: 1,
+    liked_by_viewer: false,
+    media: [],
+    links: [],
     created_at: '2026-01-10T09:00:00Z',
   },
 ]

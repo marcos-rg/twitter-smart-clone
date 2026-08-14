@@ -108,18 +108,64 @@ export interface UserSearchResponse {
   page: PageInfo
 }
 
-export interface UserTimelineItem {
+/**
+ * `/tweets/*` and `/users/{username}/tweets` types (spec §6.3 "Tweets &
+ * feed", TSC-TWEET-001/002). `TweetView` is the single shape all four
+ * tweet-reading endpoints (`POST /tweets`, `GET /tweets/{id}`,
+ * `GET /tweets/{id}/replies`, `GET /users/{username}/tweets`) render — see
+ * `backend/app/schemas/tweets.py`.
+ */
+
+export interface TweetAuthor {
   id: string
-  author_id: string
+  username: string
+  name: string
+  avatar_key: string | null
+}
+
+export interface TweetMediaOut {
+  key: string
+  content_type: string
+  position: number
+}
+
+/** One `(url, start, end)` safe-link span over `TweetView.content` — see
+ * `backend/app/services/link_extraction.py`. `start`/`end` are Unicode
+ * code-point offsets into `content`; only `http`/`https` URLs are ever
+ * present. The frontend must never render `content` as HTML — only overlay
+ * real `<a>` elements at these server-validated spans. */
+export interface LinkEntity {
+  url: string
+  start: number
+  end: number
+}
+
+export interface TweetView {
+  id: string
+  author: TweetAuthor
   content: string
   parent_tweet_id: string | null
   like_count: number
   reply_count: number
+  /** Whether the authenticated caller has liked this tweet. Display-only in
+   * this task — wiring the like button is TSC-LIKE-002. */
+  liked_by_viewer: boolean
+  media: TweetMediaOut[]
+  links: LinkEntity[]
   created_at: string
 }
 
-export interface UserTimelineResponse {
-  data: UserTimelineItem[]
+/** Body of `POST /tweets`. `parent_tweet_id` present ⇒ a flat reply (the
+ * backend rejects replying to a reply with 422); omitted/`null` ⇒ a root
+ * tweet. */
+export interface TweetCreateRequest {
+  content: string
+  parent_tweet_id?: string | null
+  media_keys?: string[]
+}
+
+export interface TweetListResponse {
+  data: TweetView[]
   page: PageInfo
 }
 
