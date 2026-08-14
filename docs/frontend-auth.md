@@ -113,6 +113,18 @@ npm run e2e             # playwright test — 8 passed, incl. mobile/desktop
                         # login + register screenshots
 ```
 
+Also verified inside the actual dev containers (`docker compose -f
+docker-compose.yml -f docker-compose.dev.yml run --rm frontend ...`), which
+surfaced a pre-existing Docker Compose gotcha fixed alongside this task: the
+`frontend_node_modules` named volume ([docker-compose.dev.yml](../docker-compose.dev.yml))
+is only populated the first time it's created — rebuilding the image after a
+`package.json`/`package-lock.json` change does **not** refresh an
+already-populated named volume, so newly added dependencies (like `msw` here)
+were missing at runtime even though the image itself was up to date. The
+[Makefile](../Makefile)'s `lint`/`test` targets now run `npm ci` inside the
+container before each frontend command, self-healing the volume whenever the
+lockfile changes.
+
 ## Human review gate
 
 Pending: auth copy (form labels, hints, toasts), validation feedback wording,
