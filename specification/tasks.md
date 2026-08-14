@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 19 |
+| Done | 20 |
 | In Progress | 1 |
-| To Do | 21 |
+| To Do | 20 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -541,7 +541,7 @@ human-review cadence is:
 <a id="tsc-media-002"></a>
 ### TSC-MEDIA-002 - Build and validate reusable image-upload UI
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Build an isolated avatar/tweet image picker and uploader before
   embedding it in final composer/profile screens.
 - **Dependencies:** [TSC-MEDIA-001](#tsc-media-001),
@@ -566,7 +566,7 @@ human-review cadence is:
 <a id="tsc-tweet-001"></a>
 ### TSC-TWEET-001 - Implement tweet, reply, and profile-timeline backend
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Implement tweet creation/retrieval, safe text/link data, up to four
   confirmed images, flat replies, reply counters, replies listing, and user timelines.
   Tweet editing/deletion and nested replies are excluded.
