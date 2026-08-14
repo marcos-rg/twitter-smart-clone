@@ -10,7 +10,9 @@ Retweets/quote-tweets/reposts are out of scope (spec: excluded from this
 project). Liking is display-only here — `liked_by_viewer`/`like_count`
 render, but the like button has no click handler; wiring
 `POST/DELETE /tweets/{id}/like` is `TSC-LIKE-002`. The main chronological
-feed (`Home.tsx`) is untouched — that's `TSC-FEED-001/002`.
+feed is a later slice — see [`frontend-feed.md`](./frontend-feed.md)
+(`TSC-FEED-002`), which reuses `TweetCard`/`TweetComposer` from this task
+unchanged.
 
 ## Corrected API types
 
