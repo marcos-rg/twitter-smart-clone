@@ -14,8 +14,13 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# Scoped to backend/ (not repo-root `lib/`) — an unscoped `lib/` here also
+# matched `frontend/src/lib/`, silently hiding real frontend source files
+# (discovered when adding `frontend/src/lib/useDebouncedValue.ts` in
+# TSC-USER-002; `.venv`'s own `lib/` is already covered by the `.venv` rule
+# below regardless).
+backend/lib/
+backend/lib64/
 parts/
 sdist/
 var/

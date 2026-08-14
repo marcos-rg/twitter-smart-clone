@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Button, EmptyState } from '../components/ui'
 import { useLogout } from '../features/auth/hooks'
 import { useAuthStore } from '../stores/auth-store'
@@ -16,7 +17,14 @@ export function Home() {
       <header className="flex items-center justify-between border-b border-border px-4 py-4">
         <div>
           <h1>Twitter Smart Clone</h1>
-          {user ? <p className="text-sm text-muted">Signed in as @{user.username}</p> : null}
+          {user ? (
+            <Link
+              to={`/profile/${user.username}`}
+              className="text-sm text-muted hover:text-foreground hover:underline"
+            >
+              Signed in as @{user.username}
+            </Link>
+          ) : null}
         </div>
         <Button
           variant="outline"

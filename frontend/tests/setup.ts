@@ -27,3 +27,12 @@ afterEach(() => {
     sessionExpired: false,
   })
 })
+
+// `App` renders a real `BrowserRouter`, which reads `window.location` at
+// mount. jsdom's `window` (and therefore its history) is shared across every
+// `it()` in a test file, so without this a test that navigates (e.g. to
+// `/profile/ada`) would leave the *next* test's `render(<App />)` starting
+// from that URL instead of `/`.
+afterEach(() => {
+  window.history.pushState({}, '', '/')
+})
