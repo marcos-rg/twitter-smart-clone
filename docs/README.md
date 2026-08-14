@@ -13,3 +13,4 @@ It is distinct from [`specification/`](../specification/), which contains the up
 - [data-model.md](./data-model.md) — PostgreSQL schema (SQLModel), Alembic migrations, async repositories with cursor pagination, and the idempotent demo-data seed script/CLI (`TSC-DATA-001`).
 - [frontend-auth.md](./frontend-auth.md) — register/login/logout, in-memory access token + httpOnly refresh cookie handling, session restoration, protected/public route guards, single-flight 401 refresh, and MSW/Playwright test evidence (`TSC-AUTH-002`).
 - [user-profile-search-backend.md](./user-profile-search-backend.md) — public profiles, self-editing, profile timeline contract, exact/prefix/fuzzy user search, cursor/error behavior, and verification commands (`TSC-USER-001`).
+- [frontend-profile-search.md](./frontend-profile-search.md) — profile view/edit and search screens, the never-expose-email guarantee, debounced race-safe search, and MSW/Playwright test evidence (`TSC-USER-002`).
