@@ -152,6 +152,12 @@ export const handlers = [
   http.get(`${API_BASE_URL}/api/v1/tweets/:tweetId/replies`, () =>
     HttpResponse.json({ data: [], page: { next_cursor: null } }),
   ),
+
+  // `/feed` default (TSC-FEED-002): empty home feed. Individual tests
+  // override with `server.use(...)` for populated/paginated/error fixtures.
+  http.get(`${API_BASE_URL}/api/v1/feed`, () =>
+    HttpResponse.json({ data: [], page: { next_cursor: null } }),
+  ),
 ]
 
 export const testUser = {

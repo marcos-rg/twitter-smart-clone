@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom'
-import { Button, EmptyState } from '../components/ui'
+import { Button } from '../components/ui'
 import { useLogout } from '../features/auth/hooks'
+import { Feed } from '../features/feed/Feed'
 import { useAuthStore } from '../stores/auth-store'
 
 /**
- * Placeholder home route. Feature pages (feed, profile, etc.) replace this in
- * later tasks; for now it proves the AppShell + routing + auth guard work end
- * to end. Shows the signed-in user and a logout action (TSC-AUTH-002).
+ * Home route: the signed-in user's chronological, infinite-scrolling feed
+ * (`Feed`, TSC-FEED-002), behind the same header (signed-in-as link + log
+ * out) proven out by the earlier routing/auth-guard scaffold (TSC-AUTH-002).
  */
 export function Home() {
   const user = useAuthStore((state) => state.user)
@@ -35,12 +36,7 @@ export function Home() {
           Log out
         </Button>
       </header>
-      <div className="p-4">
-        <EmptyState
-          title="Frontend scaffold ready"
-          description="The feed is implemented in a later task. Visit the Design Lab to browse the component library."
-        />
-      </div>
+      <Feed />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import type { CursorPageParams } from './users'
 import type { TweetCreateRequest, TweetListResponse, TweetView } from './types'
 
 const BASE = '/api/v1/tweets'
+const FEED_URL = '/api/v1/feed'
 
 /** `POST /tweets` — creates a root tweet (`parent_tweet_id` omitted) or a
  * flat reply (`parent_tweet_id` set). The backend re-validates content
@@ -28,4 +29,16 @@ export function listReplies(id: string, params: CursorPageParams = {}): Promise<
   return request<TweetListResponse>(
     `${BASE}/${encodeURIComponent(id)}/replies${qs ? `?${qs}` : ''}`,
   )
+}
+
+/** `GET /feed` — the caller's home feed: their own tweets plus tweets from
+ * everyone they follow, newest first, cursor-paginated (see
+ * `docs/feed-backend.md`). Same `TweetListResponse` shape as every other
+ * tweet-listing endpoint. */
+export function getFeed(params: CursorPageParams = {}): Promise<TweetListResponse> {
+  const query = new URLSearchParams()
+  if (params.cursor) query.set('cursor', params.cursor)
+  if (params.limit) query.set('limit', String(params.limit))
+  const qs = query.toString()
+  return request<TweetListResponse>(`${FEED_URL}${qs ? `?${qs}` : ''}`)
 }

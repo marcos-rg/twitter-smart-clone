@@ -30,6 +30,47 @@ export function userTweetsQueryKey(username: string | undefined) {
   return ['user-tweets', username?.toLowerCase()] as const
 }
 
+export function feedQueryKey() {
+  return ['feed'] as const
+}
+
+const FEED_PAGE_SIZE = 20
+
+/** The signed-in caller's home feed (TSC-FEED-002): own tweets + tweets from
+ * everyone they follow, newest first, cursor-paginated. */
+export function useFeed() {
+  return useInfiniteQuery({
+    queryKey: feedQueryKey(),
+    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      tweetsApi.getFeed({ cursor: pageParam, limit: FEED_PAGE_SIZE }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.page.next_cursor ?? undefined,
+  })
+}
+
+/**
+ * Manual "refresh" for the feed (approved refresh semantics, TSC-FEED-002
+ * human review): fetches a single fresh first page directly and replaces
+ * the *entire* cached page list with it — the feed jumps back to the
+ * newest tweets, matching mainstream "pull to refresh" behavior, rather
+ * than re-fetching every previously-loaded page (which `useInfiniteQuery`'s
+ * own `refetch()` would do, most-stale-first, for however many pages are
+ * currently in memory).
+ */
+export function useRefreshFeed() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () => tweetsApi.getFeed({ limit: FEED_PAGE_SIZE }),
+    onSuccess: (page) => {
+      queryClient.setQueryData<InfiniteData<TweetListResponse>>(feedQueryKey(), {
+        pages: [page],
+        pageParams: [undefined],
+      })
+    },
+  })
+}
+
 /** A single tweet by id (tweet-detail page). */
 export function useTweet(id: string | undefined) {
   return useQuery({
@@ -74,6 +115,10 @@ export interface CreateTweetContext {
    * when composing a reply — replies update the parent's replies cache
    * instead, based on the created tweet's own `parent_tweet_id`. */
   profileUsername?: string
+  /** When posting a root tweet from the home feed, prepend it to the
+   * cached feed (`['feed']`) too — the "newly-created-tweet" state
+   * (TSC-FEED-002 acceptance criterion) with no forced refetch. */
+  prependToFeed?: boolean
 }
 
 /**
@@ -101,8 +146,13 @@ export function useCreateTweet(context: CreateTweetContext = {}) {
           tweetQueryKey(tweet.parent_tweet_id),
           (current) => (current ? { ...current, reply_count: current.reply_count + 1 } : current),
         )
-      } else if (context.profileUsername) {
-        prependToInfiniteCache(queryClient, userTweetsQueryKey(context.profileUsername), tweet)
+      } else {
+        if (context.profileUsername) {
+          prependToInfiniteCache(queryClient, userTweetsQueryKey(context.profileUsername), tweet)
+        }
+        if (context.prependToFeed) {
+          prependToInfiniteCache(queryClient, feedQueryKey(), tweet)
+        }
       }
     },
   })

@@ -37,6 +37,36 @@ let objectUrlCounter = 0
 URL.createObjectURL = (() => `blob:mock-${objectUrlCounter++}`) as typeof URL.createObjectURL
 URL.revokeObjectURL = (() => {}) as typeof URL.revokeObjectURL
 
+// jsdom doesn't implement `window.scrollTo` (no real layout/rendering), so
+// calling it logs a "Not implemented" error and leaves `scrollY` at 0. The
+// home feed's scroll-restoration hook (TSC-FEED-002) calls it to restore
+// position on back navigation; tests stub both `scrollTo` and a writable
+// `scrollY` so that behavior is actually observable under jsdom.
+Object.defineProperty(window, 'scrollY', { value: 0, writable: true, configurable: true })
+window.scrollTo = ((x?: number | ScrollToOptions, y?: number) => {
+  const target = typeof x === 'object' ? (x.top ?? window.scrollY) : (y ?? 0)
+  Object.defineProperty(window, 'scrollY', { value: target, writable: true, configurable: true })
+}) as typeof window.scrollTo
+
+// jsdom has no `IntersectionObserver` implementation. This harmless no-op
+// stub is enough for any test that renders the feed's sentinel without
+// caring about pagination itself (it simply never fires); tests that need
+// to *drive* an intersection (`tests/features/feed/Feed.test.tsx`) install
+// their own controllable mock via `vi.stubGlobal`, which wins for the
+// duration of that test file and is restored to this default afterward.
+class NoopIntersectionObserver implements IntersectionObserver {
+  readonly root = null
+  readonly rootMargin = ''
+  readonly thresholds: number[] = []
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return []
+  }
+}
+window.IntersectionObserver = NoopIntersectionObserver as unknown as typeof IntersectionObserver
+
 // `App` renders a real `BrowserRouter`, which reads `window.location` at
 // mount. jsdom's `window` (and therefore its history) is shared across every
 // `it()` in a test file, so without this a test that navigates (e.g. to
@@ -44,4 +74,6 @@ URL.revokeObjectURL = (() => {}) as typeof URL.revokeObjectURL
 // from that URL instead of `/`.
 afterEach(() => {
   window.history.pushState({}, '', '/')
+  window.scrollTo(0, 0)
+  window.sessionStorage.clear()
 })
