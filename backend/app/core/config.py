@@ -65,6 +65,9 @@ class Settings(BaseSettings):
     refresh_token_expires_days: int = 7
     refresh_cookie_name: str = "refresh_token"
     auth_rate_limit_per_minute: int = 10
+    #: Per-user sliding-window limit for follow/unfollow (spec §10.3
+    #: suggested default: "likes/follows 60/min/user").
+    follow_rate_limit_per_minute: int = 60
 
     # --- CORS --------------------------------------------------------------------
     cors_allowed_origins: Annotated[list[str], NoDecode, BeforeValidator(_split_csv)] = Field(

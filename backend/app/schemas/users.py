@@ -24,6 +24,16 @@ class UserPublicProfile(BaseModel):
     bio: str | None = Field(default=None, max_length=BIO_MAX_LENGTH)
     avatar_key: str | None = None
     created_at: datetime
+    #: Follow-graph fields (spec §5.1 `follows`, TSC-SOC-001). Defaulted so
+    #: `model_validate()` from a bare ORM `User` (e.g. the `/users/me` PATCH
+    #: response) still works without callers threading counts through every
+    #: call site — `GET /users/{username}` is the one route that populates
+    #: them with real values via `UsersService.get_profile_view`.
+    followers_count: int = 0
+    following_count: int = 0
+    #: Whether the authenticated caller follows this profile. Always
+    #: `False` on one's own profile (self-follow is impossible).
+    is_following: bool = False
 
     model_config = {"from_attributes": True}
 
