@@ -16,6 +16,9 @@ export interface TweetComposerProps {
   /** Set when posting a root tweet from a profile screen, so the new tweet
    * can be prepended to that profile's cached timeline without a refetch. */
   profileUsername?: string
+  /** Set when posting a root tweet from the home feed, so the new tweet is
+   * prepended to the cached feed without a refetch (TSC-FEED-002). */
+  prependToFeed?: boolean
   placeholder?: string
   onPosted?: (tweetId: string) => void
   /** Overrides the embedded `ImageUploader`'s real presign/upload/confirm
@@ -46,6 +49,7 @@ function strippedLength(content: string): number {
 export function TweetComposer({
   parentTweetId,
   profileUsername,
+  prependToFeed,
   placeholder,
   onPosted,
   imageUploadAdapter,
@@ -55,7 +59,7 @@ export function TweetComposer({
   const [uploadItems, setUploadItems] = useState<UploadItem[]>([])
   const [uploaderResetKey, setUploaderResetKey] = useState(0)
   const { toast } = useToast()
-  const mutation = useCreateTweet({ profileUsername })
+  const mutation = useCreateTweet({ profileUsername, prependToFeed })
 
   const isReply = Boolean(parentTweetId)
   const trimmedLength = strippedLength(content)
