@@ -96,7 +96,7 @@ jobs:
         run: docker compose ${{ env.COMPOSE_FILES }} run --rm backend uv run black --check .
 
       - name: Mypy (type check)
-        run: docker compose ${{ env.COMPOSE_FILES }} run --rm backend uv run mypy app tests
+        run: docker compose ${{ env.COMPOSE_FILES }} run --rm backend uv run mypy app tests scripts
 
       - name: Pytest with coverage gate
         run: docker compose ${{ env.COMPOSE_FILES }} run --rm backend sh -c "uv run coverage run -m pytest && uv run coverage report"

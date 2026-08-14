@@ -21,12 +21,8 @@ import structlog
 from fastapi import FastAPI
 from redis.asyncio import Redis
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import Settings
 
@@ -68,7 +64,10 @@ async def build_resources(settings: Settings) -> AppResources:
         max_overflow=settings.database_max_overflow,
         pool_pre_ping=True,
     )
-    db_sessionmaker = async_sessionmaker(db_engine, expire_on_commit=False)
+    # `class_=AsyncSession` (SQLModel's, not plain SQLAlchemy's) so every
+    # session yielded by this sessionmaker has `.exec(select(Model))`
+    # returning model instances directly — what `app.repositories.*` use.
+    db_sessionmaker = async_sessionmaker(db_engine, expire_on_commit=False, class_=AsyncSession)
 
     redis = Redis.from_url(settings.redis_url, decode_responses=True)
 

@@ -25,7 +25,7 @@ logs: ## Follow logs for every service.
 lint: ## Run backend + frontend formatting/lint/type checks inside containers.
 	$(COMPOSE) run --rm backend uv run ruff check .
 	$(COMPOSE) run --rm backend uv run black --check .
-	$(COMPOSE) run --rm backend uv run mypy app tests
+	$(COMPOSE) run --rm backend uv run mypy app tests scripts
 	$(COMPOSE) run --rm frontend npm run lint
 	$(COMPOSE) run --rm frontend npm run format:check
 	$(COMPOSE) run --rm frontend npm run typecheck
@@ -35,9 +35,7 @@ test: ## Run backend + frontend test suites (with coverage gates) inside contain
 	$(COMPOSE) run --rm frontend npm run test:coverage
 
 seed: ## Populate demo data for local development.
-	@echo "No seed script yet: the seed CLI is delivered by TSC-DATA-001."
-	@echo "Once available this target will run it inside the backend container."
+	$(COMPOSE) run --rm backend uv run python -m scripts.seed
 
 migrate: ## Apply database migrations.
-	@echo "Alembic isn't configured yet: migrations are delivered by TSC-DATA-001."
-	@echo "Once available this target will run 'alembic upgrade head' inside the backend container."
+	$(COMPOSE) run --rm backend uv run alembic upgrade head

@@ -60,6 +60,11 @@ class Settings(BaseSettings):
 
     # --- Security / auth ---------------------------------------------------------
     jwt_secret_key: str = "dev-only-change-me"
+    jwt_algorithm: str = "HS256"
+    access_token_expires_minutes: int = 15
+    refresh_token_expires_days: int = 7
+    refresh_cookie_name: str = "refresh_token"
+    auth_rate_limit_per_minute: int = 10
 
     # --- CORS --------------------------------------------------------------------
     cors_allowed_origins: Annotated[list[str], NoDecode, BeforeValidator(_split_csv)] = Field(

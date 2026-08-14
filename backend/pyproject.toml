@@ -6,15 +6,21 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aioboto3>=15.5.0",
+    "alembic>=1.16.0",
+    "argon2-cffi>=25.1.0",
     "asyncpg>=0.31.0",
     "celery>=5.6.3",
     "fastapi>=0.141.1",
+    "faker>=30.0.0",
     "pydantic-settings>=2.15.0",
     "redis>=5",
     "sqlalchemy[asyncio]>=2.0.52",
     "sqlmodel>=0.0.39",
     "structlog>=26.1.0",
+    "uuid6>=2024.7.10",
     "uvicorn[standard]>=0.52.2",
+    "pyjwt>=2.13.0",
+    "pydantic[email]>=2.13.4",
 ]
 
 [dependency-groups]
@@ -35,6 +41,13 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["E501"]
+
+# FastAPI's `Depends(...)`/`Query(...)`/etc. sentinel calls as argument
+# defaults are the framework's documented dependency-injection idiom, not the
+# mutable-default-argument bug B008 targets — exempt them explicitly instead
+# of disabling B008 outright.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends"]
 
 [tool.black]
 line-length = 100
@@ -60,11 +73,17 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["app"]
+# SQLAlchemy's async engine bridges sync DBAPI calls into async via
+# greenlet (`greenlet_spawn`); without this, `sys.settrace`-based coverage
+# silently stops recording every statement *after* an `await session.*`
+# call within the same coroutine (a documented coverage.py limitation),
+# which under-reports real coverage on most DB-touching code paths.
+concurrency = ["greenlet", "thread"]
 
 # Ratcheting coverage gate (TSC-FOUND-003): raised as features land so the
 # final 80% line-coverage gate in TSC-QA-001 is not a last-minute cliff.
 # CI fails the backend job if coverage drops below this threshold; bump it
 # upward whenever a feature task lands with well-tested code.
 [tool.coverage.report]
-fail_under = 80
+fail_under = 90
 show_missing = true

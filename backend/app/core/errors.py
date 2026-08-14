@@ -63,10 +63,12 @@ class AppError(Exception):
         details: list[dict[str, Any]] | None = None,
         code: str | None = None,
         status_code: int | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         super().__init__(message)
         self.message = message
         self.details = details
+        self.headers = headers
         if code is not None:
             self.code = code
         if status_code is not None:
@@ -99,13 +101,16 @@ def _error_response(
 async def app_error_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle domain errors raised as `AppError` subclasses."""
     assert isinstance(exc, AppError)
-    return _error_response(
+    response = _error_response(
         request,
         status_code=exc.status_code,
         code=exc.code,
         message=exc.message,
         details=exc.details,
     )
+    if exc.headers:
+        response.headers.update(exc.headers)
+    return response
 
 
 async def http_exception_handler(request: Request, exc: Exception) -> JSONResponse:
