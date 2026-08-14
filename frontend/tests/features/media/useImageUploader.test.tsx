@@ -39,7 +39,7 @@ function makeControllableAdapter() {
       }
       onProgress(100)
     },
-    async confirmOne(purpose, key, file) {
+    async confirmOne(_purpose, key, file) {
       confirmCalls.push(file.name)
       return { key, content_type: file.type, size_bytes: file.size }
     },
@@ -60,7 +60,9 @@ describe('useImageUploader', () => {
       result.current.addFiles([makeFile('zebra.png'), makeFile('apple.png')])
     })
 
-    await waitFor(() => expect(result.current.items.every((i) => i.status === 'success')).toBe(true))
+    await waitFor(() =>
+      expect(result.current.items.every((i) => i.status === 'success')).toBe(true),
+    )
 
     // Order matches selection order (zebra, then apple), not alphabetical or
     // network-completion order.
@@ -71,7 +73,9 @@ describe('useImageUploader', () => {
 
   it('rejects invalid type/size/count before any network call, with reasons exposed for accessible feedback', () => {
     const { adapter, presignCalls } = makeControllableAdapter()
-    const { result } = renderHook(() => useImageUploader({ purpose: 'tweet_image', maxFiles: 2, adapter }))
+    const { result } = renderHook(() =>
+      useImageUploader({ purpose: 'tweet_image', maxFiles: 2, adapter }),
+    )
 
     act(() => {
       result.current.addFiles([
@@ -89,7 +93,9 @@ describe('useImageUploader', () => {
 
   it('rejects a selection that exceeds maxFiles without uploading the overflow', () => {
     const { adapter, presignCalls } = makeControllableAdapter()
-    const { result } = renderHook(() => useImageUploader({ purpose: 'tweet_image', maxFiles: 2, adapter }))
+    const { result } = renderHook(() =>
+      useImageUploader({ purpose: 'tweet_image', maxFiles: 2, adapter }),
+    )
 
     act(() => {
       result.current.addFiles([makeFile('a.png'), makeFile('b.png'), makeFile('c.png')])
@@ -103,7 +109,9 @@ describe('useImageUploader', () => {
   it('retrying a failed item does not duplicate or re-upload the already-successful ones', async () => {
     const { adapter, presignCalls, confirmCalls, shouldFail } = makeControllableAdapter()
     shouldFail.add('broken.png')
-    const { result } = renderHook(() => useImageUploader({ purpose: 'tweet_image', maxFiles: 4, adapter }))
+    const { result } = renderHook(() =>
+      useImageUploader({ purpose: 'tweet_image', maxFiles: 4, adapter }),
+    )
 
     act(() => {
       result.current.addFiles([makeFile('good.png'), makeFile('broken.png')])
@@ -146,7 +154,9 @@ describe('useImageUploader', () => {
     act(() => {
       result.current.addFiles([makeFile('one.png'), makeFile('two.png')])
     })
-    await waitFor(() => expect(result.current.items.every((i) => i.status === 'success')).toBe(true))
+    await waitFor(() =>
+      expect(result.current.items.every((i) => i.status === 'success')).toBe(true),
+    )
 
     const oneId = result.current.items.find((i) => i.file.name === 'one.png')!.id
     const oneUrl = result.current.items.find((i) => i.file.name === 'one.png')!.previewUrl
@@ -183,7 +193,9 @@ describe('useImageUploader', () => {
   it('replacing a single-file (avatar) selection revokes the previous preview URL', async () => {
     const { adapter } = makeControllableAdapter()
     const revokeSpy = vi.spyOn(URL, 'revokeObjectURL')
-    const { result } = renderHook(() => useImageUploader({ purpose: 'avatar', maxFiles: 1, adapter }))
+    const { result } = renderHook(() =>
+      useImageUploader({ purpose: 'avatar', maxFiles: 1, adapter }),
+    )
 
     act(() => {
       result.current.addFiles([makeFile('first.png')])
@@ -211,7 +223,9 @@ describe('useImageUploader', () => {
     act(() => {
       result.current.addFiles([makeFile('one.png'), makeFile('two.png')])
     })
-    await waitFor(() => expect(result.current.items.every((i) => i.status === 'success')).toBe(true))
+    await waitFor(() =>
+      expect(result.current.items.every((i) => i.status === 'success')).toBe(true),
+    )
 
     const oneId = result.current.items.find((i) => i.file.name === 'one.png')!.id
     act(() => {

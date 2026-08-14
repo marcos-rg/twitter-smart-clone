@@ -21,7 +21,9 @@ const UPLOAD_URL = 'https://storage.test/upload/avatar-abc123'
 const AVATAR_KEY = 'avatar/user-1/abc123.png'
 const AVATAR_URL = 'http://localhost:9000/twitter-smart-clone-media/avatar/user-1/abc123.png'
 
-function mockAuthenticatedSession(user: typeof testUser = testUser) {
+function mockAuthenticatedSession(
+  user: Omit<typeof testUser, 'avatar_key'> & { avatar_key: string | null } = testUser,
+) {
   server.use(
     http.post('*/api/v1/auth/refresh', () =>
       HttpResponse.json({ access_token: 'restored-token', token_type: 'bearer', expires_in: 900 }),
@@ -68,7 +70,7 @@ describe('Avatar upload on the profile-edit screen', () => {
     await goToEditScreen(user)
 
     const file = new File([new Uint8Array(1024)], 'me.png', { type: 'image/png' })
-    await user.upload(screen.getByLabelText('Avatar', { selector: 'input' }), file)
+    await user.upload(screen.getByRole('group', { name: 'Avatar' }).querySelector('input')!, file)
 
     // Immediately after upload the uploader shows its own local object-URL
     // preview (instant feedback) rather than round-tripping through the
@@ -77,7 +79,7 @@ describe('Avatar upload on the profile-edit screen', () => {
     // `avatar_key` URL is asserted in the "after reload" test below, which
     // is what the acceptance criterion is actually about.
     await waitFor(() => {
-      const avatarImg = screen.getByAltText('Ada Lovelace', { selector: 'img' })
+      const avatarImg = screen.getByRole('img', { name: 'Ada Lovelace' })
       expect(avatarImg.getAttribute('src')).toMatch(/^blob:/)
     })
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
@@ -109,7 +111,7 @@ describe('Avatar upload on the profile-edit screen', () => {
     const user = userEvent.setup()
     await user.click(screen.getByText('Signed in as @ada'))
 
-    const avatarImg = await screen.findByAltText('Ada Lovelace', { selector: 'img' })
+    const avatarImg = await screen.findByRole('img', { name: 'Ada Lovelace' })
     expect(avatarImg).toHaveAttribute('src', AVATAR_URL)
   })
 

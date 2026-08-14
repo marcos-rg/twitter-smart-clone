@@ -43,14 +43,28 @@ const permissiveUser = () => userEvent.setup({ applyAccept: false })
 
 describe('ImageUploader', () => {
   it('is empty by default and shows the picker control', () => {
-    render(<ImageUploader label="Tweet images" purpose="tweet_image" maxFiles={4} adapter={partialFailureAdapter} />)
+    render(
+      <ImageUploader
+        label="Tweet images"
+        purpose="tweet_image"
+        maxFiles={4}
+        adapter={partialFailureAdapter}
+      />,
+    )
     expect(screen.getByRole('button', { name: 'Add images' })).toBeInTheDocument()
     expect(screen.queryByRole('list')).not.toBeInTheDocument()
   })
 
   it('rejects an invalid file before upload and announces it accessibly', async () => {
     const user = permissiveUser()
-    render(<ImageUploader label="Tweet images" purpose="tweet_image" maxFiles={4} adapter={partialFailureAdapter} />)
+    render(
+      <ImageUploader
+        label="Tweet images"
+        purpose="tweet_image"
+        maxFiles={4}
+        adapter={partialFailureAdapter}
+      />,
+    )
 
     await selectFiles(user, [makeFile('resume.pdf', 'application/pdf')])
 
@@ -62,7 +76,14 @@ describe('ImageUploader', () => {
 
   it('uploads valid files and reaches the complete state', async () => {
     const user = userEvent.setup()
-    render(<ImageUploader label="Tweet images" purpose="tweet_image" maxFiles={4} adapter={partialFailureAdapter} />)
+    render(
+      <ImageUploader
+        label="Tweet images"
+        purpose="tweet_image"
+        maxFiles={4}
+        adapter={partialFailureAdapter}
+      />,
+    )
 
     await selectFiles(user, [makeFile('cat.png')])
 
@@ -71,7 +92,14 @@ describe('ImageUploader', () => {
 
   it('shows a partial-failure state with retry, and retry recovers without touching the successful item', async () => {
     const user = userEvent.setup()
-    render(<ImageUploader label="Tweet images" purpose="tweet_image" maxFiles={4} adapter={partialFailureAdapter} />)
+    render(
+      <ImageUploader
+        label="Tweet images"
+        purpose="tweet_image"
+        maxFiles={4}
+        adapter={partialFailureAdapter}
+      />,
+    )
 
     await selectFiles(user, [makeFile('good.png'), makeFile('fail-bad.png')])
 
@@ -82,7 +110,14 @@ describe('ImageUploader', () => {
 
   it('is keyboard operable: Tab reaches the picker and reorder controls, Enter/Space activates them', async () => {
     const user = userEvent.setup()
-    render(<ImageUploader label="Tweet images" purpose="tweet_image" maxFiles={4} adapter={partialFailureAdapter} />)
+    render(
+      <ImageUploader
+        label="Tweet images"
+        purpose="tweet_image"
+        maxFiles={4}
+        adapter={partialFailureAdapter}
+      />,
+    )
 
     await selectFiles(user, [makeFile('one.png'), makeFile('two.png')])
     await waitFor(() => expect(screen.getAllByText('Uploaded')).toHaveLength(2))
@@ -101,7 +136,12 @@ describe('ImageUploader', () => {
   it('has no accessibility violations in the partial-failure state', async () => {
     const user = userEvent.setup()
     const { container } = render(
-      <ImageUploader label="Tweet images" purpose="tweet_image" maxFiles={4} adapter={partialFailureAdapter} />,
+      <ImageUploader
+        label="Tweet images"
+        purpose="tweet_image"
+        maxFiles={4}
+        adapter={partialFailureAdapter}
+      />,
     )
 
     await selectFiles(user, [makeFile('good.png'), makeFile('fail-bad.png')])
