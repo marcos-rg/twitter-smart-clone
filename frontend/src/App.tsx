@@ -14,7 +14,7 @@ import { Register } from './routes/Register'
 import { Search } from './routes/Search'
 import { ProtectedRoute, PublicOnlyRoute } from './routes/guards/RouteGuards'
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
 })
 

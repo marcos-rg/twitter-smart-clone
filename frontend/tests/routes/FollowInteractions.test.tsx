@@ -2,8 +2,8 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { axe } from 'jest-axe'
-import { describe, expect, it } from 'vitest'
-import App from '../../src/App'
+import { beforeEach, describe, expect, it } from 'vitest'
+import App, { queryClient } from '../../src/App'
 import { server } from '../mocks/server'
 import { testUser } from '../mocks/handlers'
 
@@ -56,6 +56,9 @@ function mockBobProfile(
 }
 
 describe('FollowButton', () => {
+  beforeEach(() => {
+    queryClient.clear()
+  })
   it('renders no follow control on your own profile', async () => {
     mockAuthenticatedSession()
     const user = userEvent.setup()
