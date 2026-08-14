@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 24 |
+| Done | 26 |
 | In Progress | 1 |
-| To Do | 16 |
+| To Do | 14 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -667,7 +667,7 @@ human-review cadence is:
 <a id="tsc-feed-002"></a>
 ### TSC-FEED-002 - Implement responsive infinite-scrolling home feed
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Build the authenticated home route, infinite scrolling, refresh,
   and resilient feed states using the shared TweetCard.
 - **Dependencies:** [TSC-FEED-001](#tsc-feed-001),
@@ -688,7 +688,7 @@ human-review cadence is:
 <a id="tsc-feed-003"></a>
 ### TSC-FEED-003 - Verify feed behavior end to end
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Validate feed membership, ordering, pagination, new-post behavior,
   and responsive interaction against the real stack.
 - **Dependencies:** [TSC-FEED-001](#tsc-feed-001),
@@ -707,7 +707,7 @@ human-review cadence is:
 <a id="tsc-like-001"></a>
 ### TSC-LIKE-001 - Implement like/unlike backend
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Implement idempotent likes, accurate counters, viewer-like state,
   notifications, and rate limiting.
 - **Dependencies:** [TSC-TWEET-001](#tsc-tweet-001),

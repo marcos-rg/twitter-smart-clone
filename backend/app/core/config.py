@@ -89,6 +89,11 @@ class Settings(BaseSettings):
     #: tweets and replies, spec §10.3 suggested default: "tweet create
     #: 30/min/user").
     tweet_rate_limit_per_minute: int = 30
+    #: Per-user sliding-window limit for like/unlike (spec §10.3 suggested
+    #: default: "likes/follows 60/min/user"), separate from
+    #: `follow_rate_limit_per_minute` so the two resources' windows never
+    #: share a Redis key.
+    like_rate_limit_per_minute: int = 60
 
     # --- Feed (spec §8.2) ---------------------------------------------------------
     #: TTL of the cached first page of `GET /feed` per user (spec §8.2: "a

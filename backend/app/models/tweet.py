@@ -1,7 +1,10 @@
 """`tweets` (spec §5.1): a post, or (when `parent_tweet_id` is set) a flat
 reply to one. `like_count`/`reply_count` are denormalized counters updated
-in the same transaction as the like/reply insert (spec §5.3); a periodic
-Celery reconciliation job is deferred to a later task.
+in the same transaction as the like/reply insert (spec §5.3), each via an
+atomic `UPDATE ... SET x = x + delta` (see `TweetRepository.increment_like_count`/
+`increment_reply_count`) rather than a read-modify-write; `app.workers.reconcile_counters`
+(`TSC-LIKE-001`) is the periodic Celery safety net that repairs any drift in
+either counter.
 
 The "a reply cannot itself have replies" invariant (flat, depth-1 replies
 only) is a service-layer rule, not a database constraint, per spec §5.1 —

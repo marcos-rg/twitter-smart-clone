@@ -85,12 +85,27 @@ class TweetRepository(BaseRepository[Tweet]):
         await self.session.flush()
 
     async def increment_like_count(self, tweet_id: UUID, *, delta: int = 1) -> None:
-        """Adjust `like_count` by `delta` (positive on like, negative on unlike)."""
-        tweet = await self.get(tweet_id)
-        if tweet is not None:
-            tweet.like_count += delta
-            self.session.add(tweet)
-            await self.session.flush()
+        """Adjust `like_count` by `delta` (positive on like, negative on
+        unlike), atomically.
+
+        Mirrors `increment_reply_count`: a relative SQL `UPDATE ... SET
+        like_count = GREATEST(0, like_count + delta)` rather than a
+        read-modify-write through the ORM, so two concurrent like/unlike
+        calls for the same tweet each issue their own atomic increment
+        (PostgreSQL serializes the two `UPDATE`s via the row lock; no lost
+        update). `GREATEST(0, ...)` is a defensive floor — the like/unlike
+        idempotency contract in `LikeRepository`/`LikesService` should
+        already prevent `like_count` from going negative, but this makes
+        "counters never go negative" (this task's acceptance criterion)
+        true at the database level too, not just by service-layer discipline.
+        """
+        tweet_table = cast(Any, Tweet).__table__
+        await self.session.exec(
+            tweet_table.update()
+            .where(Tweet.id == tweet_id)
+            .values(like_count=func.greatest(0, Tweet.like_count + delta))
+        )
+        await self.session.flush()
 
     async def count_top_level_by_author(self, author_id: UUID) -> int:
         """How many non-reply tweets `author_id` has posted. Used by the

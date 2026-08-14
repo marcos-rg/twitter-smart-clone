@@ -21,7 +21,7 @@ celery_app = Celery(
     # `@celery_app.task` when imported; `include` is what makes the
     # `worker` process actually import them (it only imports this module
     # via `-A app.workers.celery_app`, not the rest of `app.workers`).
-    include=["app.workers.media_cleanup"],
+    include=["app.workers.media_cleanup", "app.workers.reconcile_counters"],
 )
 
 celery_app.conf.update(
@@ -32,14 +32,19 @@ celery_app.conf.update(
     enable_utc=True,
     task_track_started=True,
     # Intended cadence for `app.workers.media_cleanup.cleanup_abandoned_uploads`
-    # (TSC-MEDIA-001). Inert until a `beat` service is added alongside
+    # (TSC-MEDIA-001) and `app.workers.reconcile_counters.reconcile_counters`
+    # (TSC-LIKE-001). Inert until a `beat` service is added alongside
     # `worker` in `docker-compose.yml` (`docker-compose.yml`'s `worker`
-    # comment: "`beat` (periodic tasks) is deferred") — until then this task
-    # runs on manual/cron invocation (see that module's docstring).
+    # comment: "`beat` (periodic tasks) is deferred") — until then these
+    # tasks run on manual/cron invocation (see each module's docstring).
     beat_schedule={
         "cleanup-abandoned-media-uploads": {
             "task": "app.workers.media_cleanup.cleanup_abandoned_uploads",
             "schedule": 3600.0,  # hourly
+        },
+        "reconcile-tweet-counters": {
+            "task": "app.workers.reconcile_counters.reconcile_counters",
+            "schedule": 900.0,  # every 15 minutes
         },
     },
 )
