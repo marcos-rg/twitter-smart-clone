@@ -19,6 +19,7 @@ from app.core.middleware import RequestContextMiddleware, SecurityHeadersMiddlew
 from app.core.resources import create_lifespan
 from app.routers.auth import router as auth_router
 from app.routers.health import router as health_router
+from app.routers.users import router as users_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -55,6 +56,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_exception_handlers(app)
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(users_router)
 
     return app
 
