@@ -38,6 +38,14 @@ export function ProtectedRoute({ children }: RouteGuardProps) {
 export function PublicOnlyRoute({ children }: RouteGuardProps) {
   const status = useAuthStore((state) => state.status)
 
+  if (status === 'idle' || status === 'loading') {
+    return (
+      <div className="p-4">
+        <Skeleton className="h-24 w-full" label="Restoring your session" />
+      </div>
+    )
+  }
+
   if (status === 'authenticated') {
     return <Navigate to="/" replace />
   }
