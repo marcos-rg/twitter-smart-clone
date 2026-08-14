@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 26 |
+| Done | 27 |
 | In Progress | 1 |
-| To Do | 14 |
+| To Do | 13 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -707,7 +707,7 @@ human-review cadence is:
 <a id="tsc-like-001"></a>
 ### TSC-LIKE-001 - Implement like/unlike backend
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Implement idempotent likes, accurate counters, viewer-like state,
   notifications, and rate limiting.
 - **Dependencies:** [TSC-TWEET-001](#tsc-tweet-001),
@@ -729,7 +729,7 @@ human-review cadence is:
 <a id="tsc-like-002"></a>
 ### TSC-LIKE-002 - Implement optimistic like interactions
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Add accessible like/unlike controls to tweet cards and details with
   optimistic count/state updates, animation, and reliable rollback.
 - **Dependencies:** [TSC-LIKE-001](#tsc-like-001),
