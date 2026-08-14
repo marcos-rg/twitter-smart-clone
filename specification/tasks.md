@@ -46,8 +46,8 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 10 |
-| In Progress | 1 |
+| Done | 11 |
+| In Progress | 0 |
 | To Do | 30 |
 
 The counts above reflect the repository at the time this plan was created: requirements
@@ -329,7 +329,7 @@ human-review cadence is:
 <a id="tsc-user-001"></a>
 ### TSC-USER-001 - Implement profile and user-search backend
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Implement public profiles, self-editing, profile timelines contract,
   and exact/prefix/fuzzy user search with object-level authorization.
 - **Dependencies:** [TSC-AUTH-003](#tsc-auth-003),
