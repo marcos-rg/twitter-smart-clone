@@ -26,9 +26,7 @@ lint: ## Run backend + frontend formatting/lint/type checks inside containers.
 	$(COMPOSE) run --rm backend uv run ruff check .
 	$(COMPOSE) run --rm backend uv run black --check .
 	$(COMPOSE) run --rm backend uv run mypy app tests scripts
-	$(COMPOSE) run --rm frontend sh -c "npm ci && npm run lint"
-	$(COMPOSE) run --rm frontend sh -c "npm ci && npm run format:check"
-	$(COMPOSE) run --rm frontend sh -c "npm ci && npm run typecheck"
+	$(COMPOSE) run --rm frontend sh -c "npm ci && npm run lint && npm run format:check && npm run typecheck"
 
 test: ## Run backend + frontend test suites (with coverage gates) inside containers.
 	$(COMPOSE) run --rm backend sh -c "uv run coverage run -m pytest && uv run coverage report"
