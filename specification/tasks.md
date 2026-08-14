@@ -47,8 +47,8 @@ and the relevant living documentation in the same pull request.
 | Status | Count |
 |---|---:|
 | Done | 9 |
-| In Progress | 0 |
-| To Do | 32 |
+| In Progress | 1 |
+| To Do | 31 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -304,7 +304,7 @@ human-review cadence is:
 <a id="tsc-auth-003"></a>
 ### TSC-AUTH-003 - Verify the authentication vertical slice
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Prove backend and frontend auth work together in the container
   stack, including failure and recovery paths.
 - **Dependencies:** [TSC-AUTH-001](#tsc-auth-001),
