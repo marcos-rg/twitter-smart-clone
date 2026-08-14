@@ -64,7 +64,7 @@ explicit_package_bases = true
 # upstream). Everywhere they're imported, values crossing the boundary are
 # explicitly typed/narrowed on our side instead of trusted from these libs.
 [[tool.mypy.overrides]]
-module = ["aioboto3.*", "celery.*"]
+module = ["aioboto3.*", "botocore.*", "celery.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

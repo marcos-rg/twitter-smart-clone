@@ -24,6 +24,7 @@ from app.core.resources import create_lifespan
 from app.routers.auth import router as auth_router
 from app.routers.follows import router as follows_router
 from app.routers.health import router as health_router
+from app.routers.media import router as media_router
 from app.routers.notifications import router as notifications_router
 from app.routers.users import router as users_router
 from app.routers.ws import router as ws_router
@@ -89,6 +90,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth_router)
     app.include_router(users_router)
     app.include_router(follows_router)
+    app.include_router(media_router)
     app.include_router(notifications_router)
     app.include_router(ws_router)
 
