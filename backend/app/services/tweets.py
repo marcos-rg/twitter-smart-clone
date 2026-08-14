@@ -26,7 +26,10 @@ whitespace/link contract in `app.schemas.tweets`/`app.services.link_extraction`)
 
 from __future__ import annotations
 
+import json
 from uuid import UUID
+
+from redis.asyncio import Redis
 
 from app.core.errors import AppError
 from app.models.notification import NotificationType
@@ -34,8 +37,9 @@ from app.models.pending_upload import MediaPurpose, PendingUpload, PendingUpload
 from app.models.tweet import Tweet
 from app.models.tweet_media import TweetMedia
 from app.models.user import User
+from app.repositories.follows import FollowRepository
 from app.repositories.likes import LikeRepository
-from app.repositories.pagination import Cursor, InvalidCursorError, Page, decode_cursor
+from app.repositories.pagination import Cursor, InvalidCursorError, Page, clamp_limit, decode_cursor
 from app.repositories.pending_uploads import PendingUploadRepository
 from app.repositories.tweet_media import TweetMediaRepository
 from app.repositories.tweets import TweetRepository
@@ -137,6 +141,9 @@ class TweetsService:
         users: UserRepository,
         likes: LikeRepository,
         notifications: NotificationsService,
+        follows: FollowRepository | None = None,
+        redis: Redis | None = None,
+        feed_cache_ttl_seconds: int = 0,
     ) -> None:
         self.tweets = tweets
         self.tweet_media = tweet_media
@@ -144,6 +151,13 @@ class TweetsService:
         self.users = users
         self.likes = likes
         self.notifications = notifications
+        #: Only required by `list_feed` (`GET /feed`, `TSC-FEED-001`) — the
+        #: create/get/replies/timeline routes never touch follows or Redis,
+        #: so these stay optional rather than forcing every caller of this
+        #: service to construct a `FollowRepository`/`Redis` it doesn't use.
+        self.follows = follows
+        self.redis = redis
+        self.feed_cache_ttl_seconds = feed_cache_ttl_seconds
 
     async def create_tweet(
         self,
@@ -230,6 +244,89 @@ class TweetsService:
         decoded_cursor = self._decode_cursor(cursor)
         page = await self.tweets.list_by_author(author.id, cursor=decoded_cursor, limit=limit)
         return await self._to_view_page(page, viewer)
+
+    async def list_feed(
+        self, viewer: User, *, cursor: str | None, limit: int | None
+    ) -> Page[TweetView]:
+        """The home feed (spec §8.2 fan-out on read): `viewer`'s own tweets
+        plus every tweet by a user `viewer` follows, newest first.
+
+        **Own-tweets inclusion (this task's human-review focus):** the
+        approved product rule is that a user's home feed includes their own
+        tweets, matching mainstream "home timeline" behavior — a user who
+        posts should see their own tweet appear at the top of their own
+        feed, not only on their profile. `_feed_author_ids` adds `viewer.id`
+        to the followee set for exactly this reason.
+
+        **Caching (this task's human-review focus):** only the *first* page
+        (`cursor is None`) of the *default-shaped* request is cached, for
+        `feed_cache_ttl_seconds` (spec §8.2: "a short-TTL Redis cache may
+        cache the first page per user for a few seconds to smooth
+        infinite-scroll refreshes"). The cache key embeds `viewer.id`, so one
+        user's cached feed can never be served to another. There is no
+        active invalidation on new tweets from followees — the TTL is short
+        enough (default 5s) that a page is never stale for long, and
+        invalidating every follower's cache on each tweet would reintroduce
+        the fan-out-on-write cost this design deliberately defers (spec
+        §8.2: "Suitable for this scale; fan-out-on-write is deferred").
+        Every later page, and every request once the TTL has expired, always
+        reads live from PostgreSQL.
+        """
+        decoded_cursor = self._decode_cursor(cursor)
+        use_cache = (
+            decoded_cursor is None and self.redis is not None and self.feed_cache_ttl_seconds > 0
+        )
+        cache_key = self._feed_cache_key(viewer.id, limit) if use_cache else None
+
+        if cache_key is not None:
+            cached = await self._read_feed_cache(cache_key)
+            if cached is not None:
+                return cached
+
+        author_ids = await self._feed_author_ids(viewer.id)
+        page = await self.tweets.list_feed(author_ids, cursor=decoded_cursor, limit=limit)
+        view_page = await self._to_view_page(page, viewer)
+
+        if cache_key is not None:
+            await self._write_feed_cache(cache_key, view_page)
+
+        return view_page
+
+    async def _feed_author_ids(self, viewer_id: UUID) -> list[UUID]:
+        """The approved author set for `viewer_id`'s home feed: everyone
+        they follow, plus themselves (see `list_feed`'s docstring).
+        """
+        assert self.follows is not None, "TweetsService.list_feed requires a FollowRepository"
+        followee_ids = await self.follows.list_followee_ids(viewer_id)
+        return [viewer_id, *followee_ids]
+
+    @staticmethod
+    def _feed_cache_key(viewer_id: UUID, limit: int | None) -> str:
+        """Per-user, per-limit cache key — never shared across users, so a
+        cache hit can never leak one user's feed to another.
+        """
+        return f"feed:{viewer_id}:{clamp_limit(limit)}"
+
+    async def _read_feed_cache(self, cache_key: str) -> Page[TweetView] | None:
+        assert self.redis is not None
+        raw = await self.redis.get(cache_key)
+        if raw is None:
+            return None
+        payload = json.loads(raw)
+        return Page(
+            items=[TweetView.model_validate(item) for item in payload["items"]],
+            next_cursor=payload["next_cursor"],
+        )
+
+    async def _write_feed_cache(self, cache_key: str, page: Page[TweetView]) -> None:
+        assert self.redis is not None
+        payload = json.dumps(
+            {
+                "items": [item.model_dump(mode="json") for item in page.items],
+                "next_cursor": page.next_cursor,
+            }
+        )
+        await self.redis.set(cache_key, payload, ex=self.feed_cache_ttl_seconds)
 
     # --- media verification --------------------------------------------------
 
