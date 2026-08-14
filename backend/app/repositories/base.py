@@ -42,7 +42,7 @@ class BaseRepository[ModelT: SQLModel]:
         """Total row count for the table (used sparingly — pagination uses
         the keyset `limit + 1` lookahead instead of `COUNT` for list pages).
         """
-from sqlmodel import func
+        from sqlmodel import func
 
-result = await self.session.exec(select(func.count()).select_from(self.model))
-return int(result.one())
+        result = await self.session.exec(select(func.count()).select_from(self.model))
+        return int(result.one())

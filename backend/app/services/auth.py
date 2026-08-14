@@ -102,14 +102,14 @@ class AuthService:
         password is wrong (no user enumeration).
         """
         user = await self.users.get_by_email(email)
-if user is None:
-    dummy_hash = globals().get("_DUMMY_PASSWORD_HASH")
-    if dummy_hash is None:
-        dummy_hash = globals()["_DUMMY_PASSWORD_HASH"] = hash_password(
-            "dummy-timing-safety-password"
-        )
-    verify_password(password, dummy_hash)
-    raise InvalidCredentialsError()
+        if user is None:
+            dummy_hash = globals().get("_DUMMY_PASSWORD_HASH")
+            if dummy_hash is None:
+                dummy_hash = globals()["_DUMMY_PASSWORD_HASH"] = hash_password(
+                    "dummy-timing-safety-password"
+                )
+            verify_password(password, dummy_hash)
+            raise InvalidCredentialsError()
         if not verify_password(password, user.password_hash):
             raise InvalidCredentialsError()
         return user
