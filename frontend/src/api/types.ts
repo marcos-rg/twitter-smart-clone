@@ -64,6 +64,14 @@ export interface UserPublicProfile {
   bio: string | null
   avatar_key: string | null
   created_at: string
+  /** Follow-graph fields (TSC-SOC-001). Populated by `GET /users/{username}`;
+   * default to `0`/`0`/`false` on any other response shape that happens to
+   * validate against this type (e.g. `PATCH /users/me`'s echoed body). */
+  followers_count: number
+  following_count: number
+  /** Whether the authenticated caller follows this profile. Always `false`
+   * on one's own profile — self-follow is impossible. */
+  is_following: boolean
 }
 
 /** `PATCH /users/me` response: the public profile shape plus the owner's own
@@ -112,5 +120,35 @@ export interface UserTimelineItem {
 
 export interface UserTimelineResponse {
   data: UserTimelineItem[]
+  page: PageInfo
+}
+
+/**
+ * `/users/{username}/follow`, `/followers`, `/following` types
+ * (spec §6.1, §6.3 "Follows", TSC-SOC-001).
+ */
+
+/** `POST`/`DELETE /users/{username}/follow` response: the relationship after
+ * the call plus the target's updated follower count, enough to update the UI
+ * from this response alone (no profile re-fetch needed). */
+export interface FollowRelationship {
+  following: boolean
+  followers_count: number
+}
+
+/** One row of a followers/following list. Deliberately has no
+ * `is_following` field — the backend doesn't compute the caller's
+ * relationship to each row, so list rows link to a profile rather than
+ * rendering a (potentially wrong) follow control of their own. */
+export interface FollowUserItem {
+  id: string
+  name: string
+  username: string
+  bio: string | null
+  avatar_key: string | null
+}
+
+export interface FollowListResponse {
+  data: FollowUserItem[]
   page: PageInfo
 }
