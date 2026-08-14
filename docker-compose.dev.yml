@@ -18,6 +18,13 @@ services:
       - backend_venv:/app/.venv
 
   worker:
+    # Depend on backend so it initializes the shared backend_venv named volume
+    # before worker starts. Both containers use the same image and volume mount
+    # point (/app/.venv); without ordering Docker races to populate the volume
+    # from the image layer, which causes a "lib64: file exists" symlink error.
+    depends_on:
+      backend:
+        condition: service_started
     volumes:
       - ./backend/app:/app/app
       - ./backend/tests:/app/tests

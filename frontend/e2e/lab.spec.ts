@@ -47,7 +47,9 @@ test('app shell renders at the three breakpoints without horizontal overflow', a
   for (const bp of breakpoints) {
     await page.setViewportSize({ width: bp.width, height: bp.height })
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: /twitter smart clone/i })).toBeVisible()
+    // "/" is a protected route (TSC-AUTH-002); without a session it redirects
+    // to /login, rendered inside the same AppShell chrome.
+    await expect(page.getByRole('heading', { name: 'Log in' })).toBeVisible()
     await expectNoHorizontalOverflow(page)
   }
 })
