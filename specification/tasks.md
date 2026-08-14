@@ -46,8 +46,8 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 11 |
-| In Progress | 1 |
+| Done | 12 |
+| In Progress | 0 |
 | To Do | 29 |
 
 The counts above reflect the repository at the time this plan was created: requirements
@@ -351,7 +351,7 @@ human-review cadence is:
 <a id="tsc-user-002"></a>
 ### TSC-USER-002 - Implement profile, profile-edit, and search interfaces
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Build responsive own/other profile pages, editable profile fields,
   user search with mode selection, and stable loading/error/empty states.
 - **Dependencies:** [TSC-USER-001](#tsc-user-001),
