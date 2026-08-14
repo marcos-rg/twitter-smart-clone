@@ -16,7 +16,7 @@ const queryClient = new QueryClient({
 /** Restores the session (refresh cookie + `/auth/me`) once, before the rest
  * of the tree renders — keeps the bootstrap effect out of `App` itself so
  * tests can render `App` without worrying about ordering. */
-function SessionBootstrap({ children }: { children: React.ReactNode }) {
+function SessionBootstrap({ children }: { children: import('react').ReactNode }) {
   useSessionBootstrap()
   return <>{children}</>
 }
