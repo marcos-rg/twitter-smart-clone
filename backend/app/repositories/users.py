@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 from dataclasses import dataclass
+from typing import Any, cast
 from uuid import UUID
 
 from sqlalchemy import and_, case, func, or_
@@ -67,6 +68,10 @@ def decode_user_search_cursor(token: str) -> UserSearchCursor:
 class UserRepository(BaseRepository[User]):
     model = User
 
+    @staticmethod
+    def _table_columns() -> Any:
+        return cast(Any, User).__table__.c
+
     async def get_by_username(self, username: str) -> User | None:
         """Case-insensitive lookup by username (the `citext` column already
         normalizes comparisons; no `.lower()` needed on either side).
@@ -83,23 +88,24 @@ class UserRepository(BaseRepository[User]):
         self, query: str, *, cursor: UserSearchCursor | None, limit: int | None
     ) -> Page[User]:
         limit = clamp_limit(limit)
+        cols = self._table_columns()
         stmt = (
             select(User)
-            .where(or_(User.username == query, func.lower(User.name) == func.lower(query)))
+            .where(or_(cols.username == query, func.lower(cols.name) == func.lower(query)))
             .order_by(
-                case((User.username == query, 0), else_=1),
-                User.username.asc(),
-                User.id.asc(),
+                case((cols.username == query, 0), else_=1),
+                cols.username.asc(),
+                cols.id.asc(),
             )
         )
         if cursor is not None:
             if cursor.username.casefold() == query.casefold():
-                stmt = stmt.where(User.username != query)
+                stmt = stmt.where(cols.username != query)
             else:
                 stmt = stmt.where(
                     or_(
-                        User.username > cursor.username,  # type: ignore[operator]
-                        and_(User.username == cursor.username, User.id > cursor.id),  # type: ignore[operator]
+                        cols.username > cursor.username,
+                        and_(cols.username == cursor.username, cols.id > cursor.id),
                     )
                 )
         stmt = stmt.limit(limit + 1)
@@ -120,16 +126,17 @@ class UserRepository(BaseRepository[User]):
     ) -> Page[User]:
         limit = clamp_limit(limit)
         pattern = f"{query}%"
+        cols = self._table_columns()
         stmt = (
             select(User)
-            .where(or_(User.username.ilike(pattern), User.name.ilike(pattern)))
-            .order_by(User.username.asc(), User.id.asc())
+            .where(or_(cols.username.ilike(pattern), cols.name.ilike(pattern)))
+            .order_by(cols.username.asc(), cols.id.asc())
         )
         if cursor is not None:
             stmt = stmt.where(
                 or_(
-                    User.username > cursor.username,  # type: ignore[operator]
-                    and_(User.username == cursor.username, User.id > cursor.id),  # type: ignore[operator]
+                    cols.username > cursor.username,
+                    and_(cols.username == cursor.username, cols.id > cursor.id),
                 )
             )
         stmt = stmt.limit(limit + 1)
@@ -149,13 +156,14 @@ class UserRepository(BaseRepository[User]):
         self, query: str, *, cursor: UserSearchCursor | None, limit: int | None
     ) -> Page[User]:
         limit = clamp_limit(limit)
+        cols = self._table_columns()
         similarity = func.greatest(
-            func.similarity(User.username, query), func.similarity(User.name, query)
+            func.similarity(cols.username, query), func.similarity(cols.name, query)
         )
         stmt = select(User, similarity).where(
             or_(
-                User.username.op("%")(query),  # type: ignore[attr-defined]
-                User.name.op("%")(query),  # type: ignore[attr-defined]
+                cols.username.op("%")(query),
+                cols.name.op("%")(query),
             )
         )
         if cursor is not None:
@@ -167,16 +175,16 @@ class UserRepository(BaseRepository[User]):
                     and_(
                         similarity == cursor.score,
                         or_(
-                            User.username > cursor.username,  # type: ignore[operator]
+                            cols.username > cursor.username,
                             and_(
-                                User.username == cursor.username,
-                                User.id > cursor.id,  # type: ignore[operator]
+                                cols.username == cursor.username,
+                                cols.id > cursor.id,
                             ),
                         ),
                     ),
                 )
             )
-        stmt = stmt.order_by(similarity.desc(), User.username.asc(), User.id.asc()).limit(limit + 1)
+        stmt = stmt.order_by(similarity.desc(), cols.username.asc(), cols.id.asc()).limit(limit + 1)
         result = await self.session.exec(stmt)
         rows = list(result.all())
         has_more = len(rows) > limit

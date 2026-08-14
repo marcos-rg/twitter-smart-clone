@@ -38,7 +38,7 @@ async def _seed_representative_users(db_session: AsyncSession) -> None:
 
 
 async def _explain_lines(db_session: AsyncSession, sql: str, params: dict[str, str]) -> str:
-    await db_session.exec(text("SET LOCAL enable_seqscan = off"))
+    await db_session.execute(text("SET LOCAL enable_seqscan = off"))
     result = await db_session.execute(text(f"EXPLAIN (COSTS OFF) {sql}"), params)
     return "\n".join(str(line[0]) for line in result.all())
 

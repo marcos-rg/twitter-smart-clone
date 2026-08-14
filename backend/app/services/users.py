@@ -6,7 +6,7 @@ from app.core.errors import AppError
 from app.models.base import utcnow
 from app.models.tweet import Tweet
 from app.models.user import User
-from app.repositories.pagination import InvalidCursorError, Page, decode_cursor
+from app.repositories.pagination import Cursor, InvalidCursorError, Page, decode_cursor
 from app.repositories.tweets import TweetRepository
 from app.repositories.users import (
     InvalidUserSearchCursorError,
@@ -94,7 +94,7 @@ class UsersService:
         return await self.users.search_fuzzy(query, cursor=decoded_cursor, limit=limit)
 
     @staticmethod
-    def _decode_timeline_cursor(cursor: str | None):
+    def _decode_timeline_cursor(cursor: str | None) -> Cursor | None:
         if cursor is None:
             return None
         try:

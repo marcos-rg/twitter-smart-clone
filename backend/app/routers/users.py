@@ -12,6 +12,7 @@ from app.models.user import User
 from app.repositories.tweets import TweetRepository
 from app.repositories.users import UserRepository
 from app.schemas.users import (
+    PageInfo,
     SearchMode,
     UserPrivateProfile,
     UserProfileUpdateRequest,
@@ -46,7 +47,7 @@ async def search_users(
     page = await users_service.search_users(query=q, mode=mode, cursor=cursor, limit=limit)
     return UserSearchResponse(
         data=[UserSearchItem.model_validate(user) for user in page.items],
-        page={"next_cursor": page.next_cursor},
+        page=PageInfo(next_cursor=page.next_cursor),
     )
 
 
@@ -93,5 +94,5 @@ async def get_user_tweets(
     page = await users_service.get_timeline(username=username, cursor=cursor, limit=limit)
     return UserTimelineResponse(
         data=[UserTimelineItem.model_validate(tweet) for tweet in page.items],
-        page={"next_cursor": page.next_cursor},
+        page=PageInfo(next_cursor=page.next_cursor),
     )
