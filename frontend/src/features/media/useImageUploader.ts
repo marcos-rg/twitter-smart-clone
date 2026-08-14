@@ -17,6 +17,11 @@ export interface UseImageUploaderOptions {
    * submit. Order always matches the on-screen item order, independent of
    * which upload happened to finish first. */
   onConfirmedKeysChange?: (keys: string[]) => void
+  /** Called whenever the full item list changes — lets a caller (e.g. a
+   * tweet composer) observe in-progress upload state (to disable submit
+   * while anything is still `uploading`/`confirming`) without duplicating
+   * this hook's state machine. */
+  onItemsChange?: (items: UploadItem[]) => void
 }
 
 function describeUploadError(error: unknown): string {
@@ -59,6 +64,7 @@ export function useImageUploader({
   maxFiles,
   adapter = defaultMediaUploadAdapter,
   onConfirmedKeysChange,
+  onItemsChange,
 }: UseImageUploaderOptions) {
   const [items, setItems] = useState<UploadItem[]>([])
   const [rejections, setRejections] = useState<string[]>([])
@@ -80,6 +86,11 @@ export function useImageUploader({
         .map((item) => item.confirmedKey as string),
     )
     // eslint-disable-next-line react-hooks/exhaustive-deps -- onConfirmedKeysChange identity is not part of the dependency contract; only item state should retrigger this.
+  }, [items])
+
+  useEffect(() => {
+    onItemsChange?.(items)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onItemsChange identity is not part of the dependency contract; only item state should retrigger this.
   }, [items])
 
   const runUpload = useCallback(
