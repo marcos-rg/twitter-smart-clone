@@ -90,6 +90,12 @@ class Settings(BaseSettings):
     #: 30/min/user").
     tweet_rate_limit_per_minute: int = 30
 
+    # --- Feed (spec §8.2) ---------------------------------------------------------
+    #: TTL of the cached first page of `GET /feed` per user (spec §8.2: "a
+    #: short-TTL Redis cache may cache the first page per user for a few
+    #: seconds to smooth infinite-scroll refreshes"). `0` disables caching.
+    feed_cache_ttl_seconds: int = 5
+
     # --- CORS --------------------------------------------------------------------
     cors_allowed_origins: Annotated[list[str], NoDecode, BeforeValidator(_split_csv)] = Field(
         default_factory=lambda: ["http://localhost:5173"]
