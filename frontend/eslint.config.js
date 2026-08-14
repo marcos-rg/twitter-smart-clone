@@ -23,5 +23,15 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
+  {
+    // Playwright fixtures use a parameter literally named `use` (its
+    // `test.extend()` API), which the react-hooks plugin misreads as a
+    // React hook call outside a component/hook — not applicable to
+    // Playwright test files.
+    files: ['e2e/**/*.ts', 'e2e-auth/**/*.ts'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+    },
+  },
   prettier,
 )
