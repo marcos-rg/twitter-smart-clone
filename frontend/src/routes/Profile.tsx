@@ -58,6 +58,9 @@ export function Profile() {
         createdAt={profile.data.created_at}
         isOwnProfile={isOwnProfile}
         onEdit={() => navigate(`/profile/${profile.data.username}/edit`)}
+        followersCount={profile.data.followers_count}
+        followingCount={profile.data.following_count}
+        isFollowing={profile.data.is_following}
       />
 
       <div>
