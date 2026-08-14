@@ -46,8 +46,8 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 23 |
-| In Progress | 1 |
+| Done | 24 |
+| In Progress | 0 |
 | To Do | 17 |
 
 The counts above reflect the repository at the time this plan was created: requirements
@@ -644,7 +644,7 @@ human-review cadence is:
 <a id="tsc-feed-001"></a>
 ### TSC-FEED-001 - Implement chronological home-feed backend
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Implement fan-out-on-read feed retrieval from followed users using
   stable keyset pagination and an optional short-TTL first-page Redis cache.
 - **Dependencies:** [TSC-TWEET-001](#tsc-tweet-001),
