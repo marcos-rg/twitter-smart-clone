@@ -7,12 +7,12 @@ profile timeline updated to render the real `TweetView` contract instead of
 the placeholder shape it shipped with.
 
 Retweets/quote-tweets/reposts are out of scope (spec: excluded from this
-project). Liking is display-only here — `liked_by_viewer`/`like_count`
-render, but the like button has no click handler; wiring
-`POST/DELETE /tweets/{id}/like` is `TSC-LIKE-002`. The main chronological
-feed is a later slice — see [`frontend-feed.md`](./frontend-feed.md)
-(`TSC-FEED-002`), which reuses `TweetCard`/`TweetComposer` from this task
-unchanged.
+project). Liking is now wired to `POST`/`DELETE /tweets/{id}/like` with an
+optimistic update and rollback — see
+[`frontend-like-interactions.md`](./frontend-like-interactions.md)
+(`TSC-LIKE-002`). The main chronological feed is a later slice — see
+[`frontend-feed.md`](./frontend-feed.md) (`TSC-FEED-002`), which reuses
+`TweetCard`/`TweetComposer` from this task unchanged.
 
 ## Corrected API types
 
@@ -124,9 +124,10 @@ scope). The whole card navigates to `/tweet/{id}` on click; the author name
 links to their profile and the timestamp links to the tweet — both real
 `<Link>`s so keyboard/screen-reader users have an actual accessible
 navigation target, not just a mouse-only card-level handler — and every
-other interactive descendant (content links, the reply button, the like
-placeholder) calls `stopPropagation` so it doesn't also trigger the card
-navigation.
+other interactive descendant (content links, the reply button, `LikeButton`)
+calls `stopPropagation` so it doesn't also trigger the card navigation. See
+[`frontend-like-interactions.md`](./frontend-like-interactions.md) for
+`LikeButton` itself (`TSC-LIKE-002`).
 
 [`TweetImageGallery`](../frontend/src/components/tweet/TweetImageGallery.tsx)
 renders a tweet's 0-4 images (ordered by `position`) in a responsive grid: 1
