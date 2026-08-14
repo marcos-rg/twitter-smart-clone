@@ -123,7 +123,9 @@ class NotificationsService:
         actor_ids = {notification.actor_id for notification in page.items}
         actors_by_id = {actor.id: actor for actor in await self.users.get_many(list(actor_ids))}
         items = [
-            NotificationWithActor(notification=notification, actor=actors_by_id[notification.actor_id])
+            NotificationWithActor(
+                notification=notification, actor=actors_by_id[notification.actor_id]
+            )
             for notification in page.items
         ]
         return Page(items=items, next_cursor=page.next_cursor)

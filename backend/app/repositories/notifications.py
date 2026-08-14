@@ -98,9 +98,7 @@ class NotificationRepository(BaseRepository[Notification]):
         await self.session.flush()
         return len(rows)
 
-    async def mark_selected_read(
-        self, recipient_id: UUID, notification_ids: Sequence[UUID]
-    ) -> int:
+    async def mark_selected_read(self, recipient_id: UUID, notification_ids: Sequence[UUID]) -> int:
         """Mark the given notification ids as read, scoped to
         `recipient_id`.
 
