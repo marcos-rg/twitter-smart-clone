@@ -46,8 +46,8 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 20 |
-| In Progress | 1 |
+| Done | 21 |
+| In Progress | 0 |
 | To Do | 20 |
 
 The counts above reflect the repository at the time this plan was created: requirements
@@ -566,7 +566,7 @@ human-review cadence is:
 <a id="tsc-tweet-001"></a>
 ### TSC-TWEET-001 - Implement tweet, reply, and profile-timeline backend
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Implement tweet creation/retrieval, safe text/link data, up to four
   confirmed images, flat replies, reply counters, replies listing, and user timelines.
   Tweet editing/deletion and nested replies are excluded.
