@@ -46,8 +46,8 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 8 |
-| In Progress | 1 |
+| Done | 9 |
+| In Progress | 0 |
 | To Do | 32 |
 
 The counts above reflect the repository at the time this plan was created: requirements
@@ -280,7 +280,7 @@ human-review cadence is:
 <a id="tsc-auth-002"></a>
 ### TSC-AUTH-002 - Implement frontend authentication and route protection
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Deliver register/login/logout/session restoration and protected
   routing while keeping access tokens in memory and refresh credentials in httpOnly
   cookies.
