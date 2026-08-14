@@ -3,6 +3,8 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
 import { ToastProvider } from './components/ui'
 import { useSessionBootstrap } from './features/auth/hooks'
+import { Followers } from './routes/Followers'
+import { Following } from './routes/Following'
 import { Home } from './routes/Home'
 import { Lab } from './routes/Lab'
 import { Login } from './routes/Login'
@@ -28,9 +30,11 @@ function SessionBootstrap({ children }: { children: import('react').ReactNode })
  * Root component: router + global providers + responsive application shell.
  * `/lab` is the in-app component interaction lab (TSC-UX-001); `/login` and
  * `/register` are public-only (TSC-AUTH-002); `/`, `/search`,
- * `/profile/:username`, and `/profile/:username/edit` require an
- * authenticated session (`/profile/:username/edit` further redirects to the
- * read-only profile unless `:username` is the signed-in user — TSC-USER-002).
+ * `/profile/:username`, `/profile/:username/edit`, `/profile/:username/followers`,
+ * and `/profile/:username/following` require an authenticated session
+ * (`/profile/:username/edit` further redirects to the read-only profile
+ * unless `:username` is the signed-in user — TSC-USER-002; the followers/
+ * following routes are the follow/social-list slice — TSC-SOC-002).
  * Further feature routes are added by later tasks.
  */
 function App() {
@@ -78,6 +82,22 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <ProfileEdit />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/:username/followers"
+                  element={
+                    <ProtectedRoute>
+                      <Followers />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/:username/following"
+                  element={
+                    <ProtectedRoute>
+                      <Following />
                     </ProtectedRoute>
                   }
                 />
