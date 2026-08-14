@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Avatar } from '../ui/Avatar'
 import { Skeleton } from '../ui/Skeleton'
 import { resolveMediaUrl } from '../../api/media'
+import { LikeButton } from '../../features/tweets/LikeButton'
 import { linkifyContent } from './linkify'
 import { TweetImageGallery } from './TweetImageGallery'
 import type { TweetView } from '../../api/types'
@@ -20,13 +21,13 @@ export interface TweetCardProps {
  * The whole card navigates to `/tweet/{id}` on click; the author name and
  * timestamp are real `<Link>`s (keyboard/screen-reader accessible without
  * relying on the card's own click handler), and every other interactive
- * descendant (content links, the reply action, the like placeholder) calls
+ * descendant (content links, the reply action, the like button) calls
  * `stopPropagation` so it doesn't also trigger the card-level navigation.
  *
  * Reposts are out of scope (spec: retweets/quote-tweets excluded) — the
  * repost action from the earlier scaffold has been removed. The like button
- * stays an inert, display-only placeholder (`liked_by_viewer`/`like_count`)
- * — wiring it to `POST/DELETE /tweets/{id}/like` is TSC-LIKE-002.
+ * (`LikeButton`) is wired to `POST`/`DELETE /tweets/{id}/like` with an
+ * optimistic update and rollback (TSC-LIKE-002).
  */
 export function TweetCard({ tweet }: TweetCardProps) {
   const navigate = useNavigate()
@@ -94,17 +95,7 @@ export function TweetCard({ tweet }: TweetCardProps) {
             <span aria-hidden="true">💬</span>
             <span aria-hidden="true">{tweet.reply_count}</span>
           </button>
-          <button
-            type="button"
-            aria-label={`${tweet.liked_by_viewer ? 'Liked' : 'Like'}, ${tweet.like_count} likes`}
-            onClick={(event) => event.stopPropagation()}
-            className={`flex items-center gap-1 rounded-full px-2 py-1 ${
-              tweet.liked_by_viewer ? 'text-brand' : ''
-            }`}
-          >
-            <span aria-hidden="true">{tweet.liked_by_viewer ? '❤' : '♡'}</span>
-            <span aria-hidden="true">{tweet.like_count}</span>
-          </button>
+          <LikeButton tweet={tweet} />
         </footer>
       </div>
     </article>

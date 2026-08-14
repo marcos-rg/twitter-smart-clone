@@ -45,6 +45,26 @@
   /* Motion */
   --transition-fast: 150ms;
   --transition-normal: 200ms;
+  /* Subtle "pop" played on the like heart when a like newly lands
+     (TSC-LIKE-002). Kept short and low-amplitude so it reads as a nudge, not
+     a distraction; disabled for `prefers-reduced-motion` both by the global
+     rule below and by `LikeButton`'s own `motion-reduce:animate-none`. */
+  --animate-like-pop: like-pop 300ms ease-out;
+}
+
+@keyframes like-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.35);
+  }
+  65% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @layer base {
