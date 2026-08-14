@@ -49,7 +49,9 @@ async def service(db_session: AsyncSession, redis_client: Redis) -> FollowsServi
     notifications_service = NotificationsService(
         NotificationRepository(db_session), UserRepository(db_session), db_session, redis_client
     )
-    return FollowsService(FollowRepository(db_session), UserRepository(db_session), notifications_service)
+    return FollowsService(
+        FollowRepository(db_session), UserRepository(db_session), notifications_service
+    )
 
 
 async def test_follow_creates_exactly_one_notification_after_commit(
@@ -151,6 +153,21 @@ async def test_follow_unknown_user_raises_not_found(
         pass
 
 
+async def test_list_followers_is_empty_for_a_user_with_no_followers(
+    db_session: AsyncSession, service: FollowsService
+) -> None:
+    lonely = await _make_user(db_session, "follows_svc_lonely")
+    await db_session.commit()
+
+    page = await service.list_followers(lonely.username, cursor=None, limit=10)
+    assert page.items == []
+    assert page.next_cursor is None
+
+    following_page = await service.list_following(lonely.username, cursor=None, limit=10)
+    assert following_page.items == []
+    assert following_page.next_cursor is None
+
+
 async def test_list_followers_and_following_resolve_users_and_paginate(
     db_session: AsyncSession, service: FollowsService
 ) -> None:
@@ -190,5 +207,3 @@ async def test_list_followers_malformed_cursor_is_rejected(
         raise AssertionError("expected InvalidPaginationCursorError")
     except InvalidPaginationCursorError:
         pass
-
-

@@ -29,7 +29,9 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
 def _users_service(session: AsyncSession = Depends(get_db_session)) -> UsersService:
-    return UsersService(UserRepository(session), TweetRepository(session), FollowRepository(session))
+    return UsersService(
+        UserRepository(session), TweetRepository(session), FollowRepository(session)
+    )
 
 
 @router.get(

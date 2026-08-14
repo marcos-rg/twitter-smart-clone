@@ -61,9 +61,7 @@ async def follow_user(
 ) -> FollowRelationship:
     await _enforce_follow_rate_limit(current_user, redis, settings)
     result = await service.follow(current_user, username)
-    return FollowRelationship(
-        following=result.is_following, followers_count=result.followers_count
-    )
+    return FollowRelationship(following=result.is_following, followers_count=result.followers_count)
 
 
 @router.delete(
@@ -80,9 +78,7 @@ async def unfollow_user(
 ) -> FollowRelationship:
     await _enforce_follow_rate_limit(current_user, redis, settings)
     result = await service.unfollow(current_user, username)
-    return FollowRelationship(
-        following=result.is_following, followers_count=result.followers_count
-    )
+    return FollowRelationship(following=result.is_following, followers_count=result.followers_count)
 
 
 @router.get(
