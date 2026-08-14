@@ -85,6 +85,10 @@ class Settings(BaseSettings):
     #: Per-user sliding-window limit for follow/unfollow (spec §10.3
     #: suggested default: "likes/follows 60/min/user").
     follow_rate_limit_per_minute: int = 60
+    #: Per-user sliding-window limit for `POST /tweets` (covers both new
+    #: tweets and replies, spec §10.3 suggested default: "tweet create
+    #: 30/min/user").
+    tweet_rate_limit_per_minute: int = 30
 
     # --- CORS --------------------------------------------------------------------
     cors_allowed_origins: Annotated[list[str], NoDecode, BeforeValidator(_split_csv)] = Field(

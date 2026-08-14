@@ -74,18 +74,8 @@ class UserSearchResponse(BaseModel):
     page: PageInfo
 
 
-class UserTimelineItem(BaseModel):
-    id: UUID
-    author_id: UUID
-    content: str
-    parent_tweet_id: UUID | None
-    like_count: int
-    reply_count: int
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class UserTimelineResponse(BaseModel):
-    data: list[UserTimelineItem]
-    page: PageInfo
+# `GET /users/{username}/tweets` (the profile timeline) is registered on
+# `app.routers.users` but renders `app.schemas.tweets.TweetView` /
+# `TweetListResponse` — the same shape `POST /tweets`, `GET /tweets/{id}`,
+# and `GET /tweets/{id}/replies` return (TSC-TWEET-001) — rather than a
+# timeline-specific DTO here.
