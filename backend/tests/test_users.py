@@ -59,6 +59,7 @@ async def _truncate_user_tables() -> None:
 def users_settings() -> Settings:
     return Settings(
         environment="test",
+        database_url=TEST_DATABASE_URL,
         jwt_secret_key="users-test-secret",
         auth_rate_limit_per_minute=1000,
     )
