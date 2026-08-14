@@ -48,8 +48,9 @@ def _users_service(session: AsyncSession = Depends(get_db_session)) -> UsersServ
 def _tweets_service(
     session: AsyncSession = Depends(get_db_session),
     redis: Redis = Depends(get_redis),
+    settings: Settings = Depends(get_settings_dep),
 ) -> TweetsService:
-    return build_tweets_service(session, redis)
+    return build_tweets_service(session, redis, settings)
 
 
 def _media_service(

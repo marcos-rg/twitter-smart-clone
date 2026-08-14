@@ -22,6 +22,7 @@ from app.core.logging import configure_logging
 from app.core.middleware import RequestContextMiddleware, SecurityHeadersMiddleware
 from app.core.resources import create_lifespan
 from app.routers.auth import router as auth_router
+from app.routers.feed import router as feed_router
 from app.routers.follows import router as follows_router
 from app.routers.health import router as health_router
 from app.routers.media import router as media_router
@@ -92,6 +93,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(users_router)
     app.include_router(follows_router)
     app.include_router(tweets_router)
+    app.include_router(feed_router)
     app.include_router(media_router)
     app.include_router(notifications_router)
     app.include_router(ws_router)
