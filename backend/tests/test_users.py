@@ -29,6 +29,7 @@ pytestmark = pytest.mark.asyncio
 def _migrated_schema_for_users() -> None:
     command.upgrade(_alembic_config(), "head")
 
+
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
     os.environ.get(
