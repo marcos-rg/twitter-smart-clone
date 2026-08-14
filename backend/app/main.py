@@ -9,8 +9,12 @@ routers are added by later feature tasks.
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+from starlette.types import Lifespan
 
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
@@ -21,6 +25,31 @@ from app.routers.auth import router as auth_router
 from app.routers.health import router as health_router
 from app.routers.notifications import router as notifications_router
 from app.routers.users import router as users_router
+from app.routers.ws import router as ws_router
+from app.ws.runtime import build_ws_runtime
+
+
+def _create_lifespan(settings: Settings) -> Lifespan[FastAPI]:
+    """Wrap `create_lifespan` (DB/Redis/S3 handles) with the WebSocket
+    runtime (`app.ws.runtime`), which depends on `app.state.resources`
+    already existing. Composed here rather than folded into
+    `app.core.resources.create_lifespan` so that module stays scoped to the
+    async resource handles it documents itself as owning.
+    """
+    resources_lifespan = create_lifespan(settings)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        async with resources_lifespan(app):
+            runtime = build_ws_runtime(app.state.resources, settings)
+            app.state.ws_runtime = runtime
+            await runtime.start()
+            try:
+                yield
+            finally:
+                await runtime.stop()
+
+    return lifespan
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -34,7 +63,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         docs_url="/api/v1/docs",
         openapi_url="/api/v1/openapi.json",
         redoc_url=None,
-        lifespan=create_lifespan(settings),
+        lifespan=_create_lifespan(settings),
     )
 
     # Starlette wraps outer-to-inner in *reverse* add-order (the last one
@@ -59,6 +88,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth_router)
     app.include_router(users_router)
     app.include_router(notifications_router)
+    app.include_router(ws_router)
 
     return app
 
