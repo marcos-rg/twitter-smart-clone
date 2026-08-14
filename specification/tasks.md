@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 17 |
+| Done | 19 |
 | In Progress | 0 |
-| To Do | 24 |
+| To Do | 22 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -489,7 +489,7 @@ human-review cadence is:
 <a id="tsc-soc-003"></a>
 ### TSC-SOC-003 - Verify the social graph vertical slice
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Prove follow/unfollow, lists, counts, and persisted/live follow
   notifications work together.
 - **Dependencies:** [TSC-SOC-001](#tsc-soc-001),
@@ -514,7 +514,7 @@ human-review cadence is:
 <a id="tsc-media-001"></a>
 ### TSC-MEDIA-001 - Implement secure media upload backend
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Implement direct-to-S3/MinIO image uploads for tweet images and
   avatars using presigned URLs and server-side object confirmation.
 - **Dependencies:** [TSC-AUTH-003](#tsc-auth-003),

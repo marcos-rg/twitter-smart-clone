@@ -54,6 +54,23 @@ class Settings(BaseSettings):
     minio_secret_key: str = Field(default="minioadmin-dev-secret", alias="MINIO_ROOT_PASSWORD")
     minio_region: str = "us-east-1"
 
+    # --- Media uploads (spec §8.4) ----------------------------------------------
+    #: Max size of a single presigned image upload. Spec §8.4: "max ~5MB each".
+    media_max_image_bytes: int = 5 * 1024 * 1024
+    #: Max tweet images per batch presign/confirm call (spec §8.4: "max 4
+    #: images/tweet"). There is no `Tweet` row yet at presign/confirm time
+    #: (TSC-TWEET-001 creates it later), so this caps the size of a single
+    #: presign/confirm request batch instead.
+    media_max_tweet_images: int = 4
+    #: How long a presigned PUT URL remains valid. Long enough for a normal
+    #: upload, short enough that a leaked URL is only exploitable briefly.
+    media_presign_expires_seconds: int = 300
+    #: A `pending_uploads` row still `pending` (never confirmed) after this
+    #: many hours is an abandoned upload: the client got a URL but never
+    #: finished/confirmed the upload. `app.workers.media_cleanup` reaps rows
+    #: (and their objects, if any landed in storage) older than this.
+    media_abandoned_upload_ttl_hours: int = 24
+
     # --- Celery ----------------------------------------------------------------
     celery_broker_url: str | None = None
     celery_result_backend: str | None = None
