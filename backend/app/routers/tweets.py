@@ -18,6 +18,7 @@ from app.core.config import Settings
 from app.core.deps import get_current_user, get_db_session, get_redis, get_settings_dep
 from app.core.rate_limit import check_rate_limit
 from app.models.user import User
+from app.repositories.follows import FollowRepository
 from app.repositories.likes import LikeRepository
 from app.repositories.notifications import NotificationRepository
 from app.repositories.pending_uploads import PendingUploadRepository
@@ -31,10 +32,11 @@ from app.services.tweets import TweetsService
 router = APIRouter(prefix="/api/v1/tweets", tags=["tweets"])
 
 
-def build_tweets_service(session: AsyncSession, redis: Redis) -> TweetsService:
-    """Shared constructor so `app.routers.users`'s timeline route builds the
-    exact same service (and thus renders the exact same `TweetView` shape)
-    as this router's create/get/replies routes.
+def build_tweets_service(session: AsyncSession, redis: Redis, settings: Settings) -> TweetsService:
+    """Shared constructor so `app.routers.users`'s timeline route and
+    `app.routers.feed`'s home-feed route build the exact same service (and
+    thus render the exact same `TweetView` shape) as this router's
+    create/get/replies routes.
     """
     notifications_service = NotificationsService(
         NotificationRepository(session), UserRepository(session), session, redis
@@ -46,14 +48,18 @@ def build_tweets_service(session: AsyncSession, redis: Redis) -> TweetsService:
         UserRepository(session),
         LikeRepository(session),
         notifications_service,
+        follows=FollowRepository(session),
+        redis=redis,
+        feed_cache_ttl_seconds=settings.feed_cache_ttl_seconds,
     )
 
 
 def _tweets_service(
     session: AsyncSession = Depends(get_db_session),
     redis: Redis = Depends(get_redis),
+    settings: Settings = Depends(get_settings_dep),
 ) -> TweetsService:
-    return build_tweets_service(session, redis)
+    return build_tweets_service(session, redis, settings)
 
 
 @router.post("", response_model=TweetView, status_code=201, summary="Create a tweet or reply.")

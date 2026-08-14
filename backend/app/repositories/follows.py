@@ -111,6 +111,19 @@ class FollowRepository(BaseRepository[Follow]):
             rows, limit, created_at_of=lambda f: f.created_at, id_of=lambda f: f.follower_id
         )
 
+    async def list_followee_ids(self, user_id: UUID) -> list[UUID]:
+        """Every id `user_id` follows, unpaginated (no `created_at`/keyset
+        ordering — the caller only needs set membership). Backs the home
+        feed's author set (spec §8.2: "queries tweets authored by the set of
+        users the requester follows"), which needs the *whole* following set
+        in one shot rather than a paginated followers/following listing page
+        at a time.
+        """
+        result = await self.session.exec(
+            select(Follow.followee_id).where(Follow.follower_id == user_id)
+        )
+        return list(result.all())
+
     async def list_following(
         self, user_id: UUID, *, cursor: Cursor | None, limit: int | None
     ) -> Page[Follow]:
