@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 22 |
-| In Progress | 0 |
-| To Do | 19 |
+| Done | 23 |
+| In Progress | 1 |
+| To Do | 17 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -619,7 +619,7 @@ human-review cadence is:
 <a id="tsc-tweet-003"></a>
 ### TSC-TWEET-003 - Verify tweets and replies end to end
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Prove text/image/link tweets, timelines, flat replies, counters, and
   reply notifications across the real stack.
 - **Dependencies:** [TSC-TWEET-001](#tsc-tweet-001),
@@ -644,7 +644,7 @@ human-review cadence is:
 <a id="tsc-feed-001"></a>
 ### TSC-FEED-001 - Implement chronological home-feed backend
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Implement fan-out-on-read feed retrieval from followed users using
   stable keyset pagination and an optional short-TTL first-page Redis cache.
 - **Dependencies:** [TSC-TWEET-001](#tsc-tweet-001),
