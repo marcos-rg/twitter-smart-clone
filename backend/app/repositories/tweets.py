@@ -75,11 +75,12 @@ class TweetRepository(BaseRepository[Tweet]):
         """Bump `reply_count` on the parent tweet (called in the same
         transaction as the reply insert, spec §5.3).
         """
-        tweet = await self.get(tweet_id)
-        if tweet is not None:
-            tweet.reply_count += 1
-            self.session.add(tweet)
-            await self.session.flush()
+await self.session.exec(
+    Tweet.__table__.update()
+    .where(Tweet.id == tweet_id)
+    .values(reply_count=Tweet.reply_count + 1)
+)  # type: ignore[call-overload]
+await self.session.flush()
 
     async def increment_like_count(self, tweet_id: UUID, *, delta: int = 1) -> None:
         """Adjust `like_count` by `delta` (positive on like, negative on unlike)."""
