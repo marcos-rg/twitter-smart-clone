@@ -296,6 +296,9 @@ jobs:
           docker compose ${{ env.COMPOSE_FILES }} -f docker-compose.e2e.yml logs
           exit 1
 
+      - name: Apply database migrations
+        run: docker compose ${{ env.COMPOSE_FILES }} -f docker-compose.e2e.yml run --rm backend uv run alembic upgrade head
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci

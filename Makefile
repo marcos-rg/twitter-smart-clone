@@ -54,4 +54,5 @@ e2e-auth: ## Run the Playwright auth E2E suite on the host against the live stac
 		if [ "$$i" = "30" ]; then echo "Timed out waiting for services to become healthy." >&2; $(COMPOSE_E2E) logs; exit 1; fi; \
 		sleep 5; \
 	done; \
+	$(COMPOSE_E2E) run --rm backend uv run alembic upgrade head; \
 	cd frontend && npm ci && npx playwright install --with-deps chromium && npm run e2e:auth
