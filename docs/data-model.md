@@ -5,6 +5,12 @@ SQLModel table models matching spec §5.1, one hand-written Alembic migration,
 an async repository layer with cursor-based keyset pagination, and an
 idempotent demo-data seed script/CLI.
 
+> **Addendum (`TSC-MEDIA-001`):** a second migration
+> (`alembic/versions/0002_add_pending_uploads.py`) adds an 8th table,
+> `pending_uploads` — not part of spec §5.1, but required to safely
+> implement §8.4's direct-to-S3/MinIO upload flow. See
+> [media-upload-backend.md](./media-upload-backend.md).
+
 ## Layout
 
 ```
