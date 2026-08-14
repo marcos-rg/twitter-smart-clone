@@ -8,6 +8,7 @@ import {
   type QueryKey,
 } from '@tanstack/react-query'
 import * as tweetsApi from '../../api/tweets'
+import * as likesApi from '../../api/likes'
 import { ApiError } from '../../api/client'
 import type { TweetCreateRequest, TweetListResponse, TweetView } from '../../api/types'
 
@@ -154,6 +155,164 @@ export function useCreateTweet(context: CreateTweetContext = {}) {
           prependToInfiniteCache(queryClient, feedQueryKey(), tweet)
         }
       }
+    },
+  })
+}
+
+/**
+ * Cache plumbing for TSC-LIKE-002 ("like state/count updates consistently
+ * across every cached representation of a tweet"). A single tweet can be
+ * cached in an unbounded number of places at once — its own `tweetQueryKey`,
+ * the home feed, any number of per-user timelines, and any number of
+ * per-parent replies lists — and the set of usernames/parent ids currently
+ * cached isn't known up front. So rather than enumerating query keys, these
+ * helpers match every cached query *by key shape* (`'feed'` /
+ * `'user-tweets'` / `'tweet-replies'` as the first key segment, matching
+ * `feedQueryKey`/`userTweetsQueryKey`/`repliesQueryKey` above) and patch the
+ * matching `TweetView` wherever it appears.
+ */
+const LIST_QUERY_KEY_PREFIXES = ['feed', 'user-tweets', 'tweet-replies'] as const
+
+function isTweetListQueryKey(queryKey: QueryKey): boolean {
+  return LIST_QUERY_KEY_PREFIXES.includes(queryKey[0] as (typeof LIST_QUERY_KEY_PREFIXES)[number])
+}
+
+function patchTweetInListResponse(
+  data: TweetListResponse,
+  id: string,
+  patch: (tweet: TweetView) => TweetView,
+): TweetListResponse {
+  if (!data.data.some((tweet) => tweet.id === id)) return data
+  return { ...data, data: data.data.map((tweet) => (tweet.id === id ? patch(tweet) : tweet)) }
+}
+
+function patchTweetInInfiniteData(
+  data: InfiniteData<TweetListResponse>,
+  id: string,
+  patch: (tweet: TweetView) => TweetView,
+): InfiniteData<TweetListResponse> {
+  let changed = false
+  const pages = data.pages.map((page) => {
+    const next = patchTweetInListResponse(page, id, patch)
+    if (next !== page) changed = true
+    return next
+  })
+  return changed ? { ...data, pages } : data
+}
+
+/** One `{queryKey, data}` pair per cache entry that currently holds tweet
+ * `id`, captured before an optimistic update so a failed mutation can
+ * restore each one exactly (not just flip the flag back). */
+export interface TweetCacheSnapshot {
+  queryKey: QueryKey
+  data: unknown
+}
+
+/** Every query whose data could contain tweet `id`: its own `tweetQueryKey`
+ * plus every currently-cached feed/user-timeline/replies list. */
+function tweetCacheQueries(queryClient: QueryClient, id: string) {
+  return queryClient.getQueryCache().findAll({
+    predicate: (query) =>
+      (query.queryKey[0] === 'tweet' && query.queryKey[1] === id) ||
+      isTweetListQueryKey(query.queryKey),
+  })
+}
+
+export function snapshotTweetCaches(queryClient: QueryClient, id: string): TweetCacheSnapshot[] {
+  return tweetCacheQueries(queryClient, id).map((query) => ({
+    queryKey: query.queryKey,
+    data: query.state.data,
+  }))
+}
+
+export function restoreTweetCaches(queryClient: QueryClient, snapshots: TweetCacheSnapshot[]) {
+  for (const { queryKey, data } of snapshots) {
+    queryClient.setQueryData(queryKey, data)
+  }
+}
+
+/** Applies `patch` to tweet `id` in every cache location that currently
+ * holds it — the tweet-detail cache (a bare `TweetView`) and every
+ * feed/timeline/replies cache (an `InfiniteData<TweetListResponse>`). A
+ * no-op wherever the tweet isn't present. */
+export function patchTweetEverywhere(
+  queryClient: QueryClient,
+  id: string,
+  patch: (tweet: TweetView) => TweetView,
+) {
+  queryClient.setQueryData<TweetView | undefined>(tweetQueryKey(id), (current) =>
+    current ? patch(current) : current,
+  )
+  for (const query of queryClient.getQueryCache().findAll({
+    predicate: (q) => isTweetListQueryKey(q.queryKey),
+  })) {
+    queryClient.setQueryData<InfiniteData<TweetListResponse> | undefined>(
+      query.queryKey,
+      (current) => (current ? patchTweetInInfiniteData(current, id, patch) : current),
+    )
+  }
+}
+
+/**
+ * Like/unlike a tweet with an optimistic update and full rollback on failure
+ * (TSC-LIKE-002 acceptance criteria), mirroring
+ * `useFollowMutation`/`useFollowMutation`'s shape but fanning the update out
+ * to every cached representation of the tweet instead of a single profile
+ * cache entry.
+ *
+ * `mutate(nextLiked)` flips `liked_by_viewer` and adjusts `like_count` by
+ * exactly one (never below zero — `Math.max(0, …)` guards a doubled optimistic
+ * decrement) immediately, before the network call resolves, everywhere the
+ * tweet is currently cached. If the request fails, every touched cache entry
+ * is restored to its exact pre-mutation snapshot — not just the flag — so a
+ * failed like/unlike never leaves one cached view (say, the feed) out of sync
+ * with another (say, the tweet-detail page). On success, the server's
+ * authoritative `liked`/`like_count` replace the optimistic guess in every
+ * cache location again, which matters for an idempotent repeat call (the
+ * count doesn't move even though the optimistic update assumed it would) and
+ * for a cache that had gone stale relative to another cached copy before the
+ * click.
+ *
+ * Callers must not call `mutate` again while `isPending` is true —
+ * `LikeButton` enforces this with a synchronous ref guard, the same pattern
+ * `FollowButton` uses, since React state updates that back `isPending` are
+ * not visible within the same synchronous click handler that fired the first
+ * click (acceptance criterion: "rapid clicks cannot produce negative counts
+ * or contradictory requests").
+ */
+export function useLikeMutation(tweetId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (nextLiked: boolean) =>
+      nextLiked ? likesApi.likeTweet(tweetId) : likesApi.unlikeTweet(tweetId),
+    onMutate: async (nextLiked: boolean) => {
+      await queryClient.cancelQueries({
+        predicate: (query) =>
+          (query.queryKey[0] === 'tweet' && query.queryKey[1] === tweetId) ||
+          isTweetListQueryKey(query.queryKey),
+      })
+      const snapshots = snapshotTweetCaches(queryClient, tweetId)
+      patchTweetEverywhere(queryClient, tweetId, (tweet) =>
+        tweet.liked_by_viewer === nextLiked
+          ? tweet
+          : {
+              ...tweet,
+              liked_by_viewer: nextLiked,
+              like_count: Math.max(0, tweet.like_count + (nextLiked ? 1 : -1)),
+            },
+      )
+      return { snapshots }
+    },
+    onError: (_error, _nextLiked, context) => {
+      if (context?.snapshots) restoreTweetCaches(queryClient, context.snapshots)
+    },
+    onSuccess: (result) => {
+      patchTweetEverywhere(queryClient, tweetId, (tweet) => ({
+        ...tweet,
+        liked_by_viewer: result.liked,
+        like_count: result.like_count,
+      }))
     },
   })
 }

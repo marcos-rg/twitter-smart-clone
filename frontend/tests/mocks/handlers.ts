@@ -153,6 +153,17 @@ export const handlers = [
     HttpResponse.json({ data: [], page: { next_cursor: null } }),
   ),
 
+  // `/tweets/:tweetId/like` defaults (TSC-LIKE-002): like/unlike succeed
+  // idempotently. Individual tests override with `server.use(...)` for
+  // specific counts and forced-failure scenarios.
+  http.post(`${API_BASE_URL}/api/v1/tweets/:tweetId/like`, () =>
+    HttpResponse.json({ liked: true, like_count: 1 }),
+  ),
+
+  http.delete(`${API_BASE_URL}/api/v1/tweets/:tweetId/like`, () =>
+    HttpResponse.json({ liked: false, like_count: 0 }),
+  ),
+
   // `/feed` default (TSC-FEED-002): empty home feed. Individual tests
   // override with `server.use(...)` for populated/paginated/error fixtures.
   http.get(`${API_BASE_URL}/api/v1/feed`, () =>

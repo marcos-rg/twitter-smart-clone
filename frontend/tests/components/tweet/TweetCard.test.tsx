@@ -1,14 +1,21 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { axe } from 'jest-axe'
 import { describe, expect, it } from 'vitest'
+import { ToastProvider } from '../../../src/components/ui'
 import { TweetCard, TweetCardSkeleton } from '../../../src/components/tweet/TweetCard'
 import type { TweetView } from '../../../src/api/types'
 
-/** TweetCard component tests (TSC-TWEET-002): safe rendering (no
- * `dangerouslySetInnerHTML`, no HTML injection from tweet content), image
- * gallery layout, avatar fallback, and navigation. */
+/** TweetCard component tests (TSC-TWEET-002/TSC-LIKE-002): safe rendering
+ * (no `dangerouslySetInnerHTML`, no HTML injection from tweet content),
+ * image gallery layout, avatar fallback, and navigation. `LikeButton`
+ * interaction/optimistic-update behavior itself is covered separately in
+ * `tests/routes/LikeInteractions.test.tsx`, against `<App />` + MSW, so its
+ * cache fan-out can be exercised for real; this file only needs a
+ * `QueryClientProvider`/`ToastProvider` present so `TweetCard` (which now
+ * always renders a live `LikeButton`) doesn't throw. */
 
 function makeTweet(overrides: Partial<TweetView> = {}): TweetView {
   return {
@@ -27,12 +34,19 @@ function makeTweet(overrides: Partial<TweetView> = {}): TweetView {
 }
 
 function renderCard(tweet: TweetView, route = '/') {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
   return render(
-    <MemoryRouter initialEntries={[route]}>
-      <Routes>
-        <Route path="*" element={<TweetCard tweet={tweet} />} />
-      </Routes>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <MemoryRouter initialEntries={[route]}>
+          <Routes>
+            <Route path="*" element={<TweetCard tweet={tweet} />} />
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
+    </QueryClientProvider>,
   )
 }
 
@@ -47,9 +61,10 @@ describe('TweetCard', () => {
     expect(screen.queryByLabelText(/repost/i)).not.toBeInTheDocument()
   })
 
-  it('reflects liked_by_viewer without wiring a mutation (inert placeholder)', () => {
+  it('reflects liked_by_viewer as a pressed, filled-heart button', () => {
     renderCard(makeTweet({ liked_by_viewer: true, like_count: 10 }))
-    expect(screen.getByRole('button', { name: 'Liked, 10 likes' })).toBeInTheDocument()
+    const likeButton = screen.getByRole('button', { name: 'Liked, 10 likes' })
+    expect(likeButton).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('wraps long content instead of overflowing', () => {
@@ -116,14 +131,21 @@ describe('TweetCard', () => {
   })
 
   it('navigates to the tweet detail route on card click', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    })
     const user = userEvent.setup()
     render(
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route path="/" element={<TweetCard tweet={makeTweet()} />} />
-          <Route path="/tweet/:tweetId" element={<div>Tweet detail page</div>} />
-        </Routes>
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <MemoryRouter initialEntries={['/']}>
+            <Routes>
+              <Route path="/" element={<TweetCard tweet={makeTweet()} />} />
+              <Route path="/tweet/:tweetId" element={<div>Tweet detail page</div>} />
+            </Routes>
+          </MemoryRouter>
+        </ToastProvider>
+      </QueryClientProvider>,
     )
     await user.click(screen.getByRole('article', { name: 'Tweet by Ada Lovelace' }))
     expect(await screen.findByText('Tweet detail page')).toBeInTheDocument()
