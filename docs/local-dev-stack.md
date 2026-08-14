@@ -46,6 +46,7 @@ Redis, and MinIO data, are preserved across `make down` / `make up`).
 | `make test`    | Run backend `pytest` and frontend `vitest` inside containers. |
 | `make seed`    | Placeholder — the seed CLI lands with `TSC-DATA-001`. |
 | `make migrate` | Placeholder — Alembic is configured with `TSC-DATA-001`. |
+| `make e2e-auth` | Start the stack (with a relaxed auth rate limit) and run the Playwright auth E2E suite (`frontend/e2e-auth/`) against it on the host, then tear the stack down. |
 
 `lint`/`test` deliberately run through `docker compose run`, not on the
 host, so the same checks are guaranteed to run identically for every
@@ -73,6 +74,13 @@ contributor and in CI (`TSC-FOUND-003`).
 - Always run both files together (`make up`/`make lint`/`make test` do
   this automatically). Running only `docker-compose.yml` starts a working
   stack too, just without host bind-mounts (edits require a rebuild).
+- **`docker-compose.e2e.yml`** — auth E2E overlay (`TSC-AUTH-003`). Layered
+  on top of the other two by `make e2e-auth` / the `auth-e2e` CI job only;
+  relaxes the backend's per-IP auth rate limit so the Playwright auth suite
+  (`frontend/e2e-auth/`, dozens of `/auth/*` calls from one IP) isn't
+  throttled. Never used by `make up`/`make lint`/`make test` or the other CI
+  jobs — every other setting (real PostgreSQL, real Redis, real cookies/JWTs)
+  is unchanged.
 
 ## Services
 

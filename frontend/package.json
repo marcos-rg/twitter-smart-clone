@@ -18,7 +18,8 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "preview": "vite preview",
-    "e2e": "npm run build && playwright test"
+    "e2e": "npm run build && playwright test",
+    "e2e:auth": "playwright test --config=playwright.auth.config.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",

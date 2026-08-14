@@ -1,8 +1,9 @@
 .DEFAULT_GOAL := help
 
 COMPOSE := docker compose -f docker-compose.yml -f docker-compose.dev.yml
+COMPOSE_E2E := $(COMPOSE) -f docker-compose.e2e.yml
 
-.PHONY: help up down build ps logs lint test seed migrate
+.PHONY: help up down build ps logs lint test seed migrate e2e-auth
 
 help: ## Show this help.
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | sort
@@ -37,3 +38,21 @@ seed: ## Populate demo data for local development.
 
 migrate: ## Apply database migrations.
 	$(COMPOSE) run --rm backend uv run alembic upgrade head
+
+e2e-auth: ## Run the Playwright auth E2E suite on the host against the live stack (starts/stops it).
+	@set -eu; \
+	trap '$(COMPOSE_E2E) down -v' EXIT; \
+	$(COMPOSE_E2E) up -d --build; \
+	echo "Waiting for services to report healthy..."; \
+	for i in $$(seq 1 30); do \
+		statuses=$$($(COMPOSE_E2E) ps --format '{{.Service}} {{.State}} {{.Health}}'); \
+		echo "$$statuses"; \
+		if echo "$$statuses" | awk 'BEGIN { seen=0 } { seen=1; if ($$2 != "running") exit 1; if ($$3 != "" && $$3 != "healthy") exit 1 } END { if (!seen) exit 1 }'; then \
+			echo "All services running/healthy."; \
+			break; \
+		fi; \
+		if [ "$$i" = "30" ]; then echo "Timed out waiting for services to become healthy." >&2; $(COMPOSE_E2E) logs; exit 1; fi; \
+		sleep 5; \
+	done; \
+	$(COMPOSE_E2E) run --rm backend uv run alembic upgrade head; \
+	cd frontend && npm ci && npx playwright install --with-deps chromium && npm run e2e:auth
