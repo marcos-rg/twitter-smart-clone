@@ -47,8 +47,8 @@ and the relevant living documentation in the same pull request.
 | Status | Count |
 |---|---:|
 | Done | 15 |
-| In Progress | 0 |
-| To Do | 26 |
+| In Progress | 1 |
+| To Do | 25 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -445,7 +445,7 @@ human-review cadence is:
 <a id="tsc-soc-001"></a>
 ### TSC-SOC-001 - Implement follow graph backend
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Implement idempotent follow/unfollow behavior, follower/following
   lists, counts, and follow notifications.
 - **Dependencies:** [TSC-USER-001](#tsc-user-001),

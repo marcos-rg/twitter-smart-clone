@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from app.core.errors import AppError
 from app.models.base import utcnow
 from app.models.tweet import Tweet
 from app.models.user import User
+from app.repositories.follows import FollowRepository
 from app.repositories.pagination import Cursor, InvalidCursorError, Page, decode_cursor
 from app.repositories.tweets import TweetRepository
 from app.repositories.users import (
@@ -38,16 +41,51 @@ class InvalidPaginationCursorError(AppError):
         super().__init__("Invalid pagination cursor.")
 
 
+@dataclass(frozen=True)
+class ProfileView:
+    """A profile plus the follow-graph fields (spec §5.1, TSC-SOC-001) the
+    `GET /users/{username}` response renders alongside it: `user` itself
+    carries none of these (they're not columns on `User`), so the router
+    builds `UserPublicProfile` from this rather than `model_validate(user)`.
+    """
+
+    user: User
+    followers_count: int
+    following_count: int
+    is_following: bool
+
+
 class UsersService:
-    def __init__(self, users: UserRepository, tweets: TweetRepository) -> None:
+    def __init__(
+        self, users: UserRepository, tweets: TweetRepository, follows: FollowRepository
+    ) -> None:
         self.users = users
         self.tweets = tweets
+        self.follows = follows
 
     async def get_public_profile(self, username: str) -> User:
         user = await self.users.get_by_username(username)
         if user is None:
             raise UserNotFoundError()
         return user
+
+    async def get_profile_view(self, username: str, viewer: User) -> ProfileView:
+        """`get_public_profile` plus follower/following counts and whether
+        `viewer` follows this profile. `is_following` is always `False` on
+        one's own profile — self-follow is impossible, not merely unusual.
+        """
+        user = await self.get_public_profile(username)
+        followers_count = await self.follows.count_followers(user.id)
+        following_count = await self.follows.count_following(user.id)
+        is_following = (
+            False if viewer.id == user.id else await self.follows.exists(viewer.id, user.id)
+        )
+        return ProfileView(
+            user=user,
+            followers_count=followers_count,
+            following_count=following_count,
+            is_following=is_following,
+        )
 
     async def update_current_user(self, current_user: User, body: UserProfileUpdateRequest) -> User:
         updates = body.model_dump(exclude_unset=True)

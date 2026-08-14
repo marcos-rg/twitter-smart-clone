@@ -4,8 +4,10 @@ unread counting, refresh-token rotation.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.notification import NotificationType
@@ -19,6 +21,7 @@ from app.repositories.pagination import decode_cursor
 from app.repositories.refresh_tokens import RefreshTokenRepository
 from app.repositories.tweets import TweetRepository
 from app.repositories.users import UserRepository
+from tests.repositories.conftest import TEST_DATABASE_URL
 
 
 async def _make_user(session: AsyncSession, username: str) -> User:
@@ -87,6 +90,80 @@ async def test_follow_unfollow_is_idempotent(db_session: AsyncSession) -> None:
     assert await follows_repo.unfollow(alice.id, bob.id) is True
     assert await follows_repo.unfollow(alice.id, bob.id) is False
     assert not await follows_repo.exists(alice.id, bob.id)
+
+
+async def test_follow_repo_follow_is_idempotent_and_counts_correctly(
+    db_session: AsyncSession,
+) -> None:
+    alice = await _make_user(db_session, "follow_repo_alice")
+    bob = await _make_user(db_session, "follow_repo_bob")
+    follows_repo = FollowRepository(db_session)
+
+    assert await follows_repo.follow(alice.id, bob.id) is True
+    # A repeat call for the same pair is a no-op: no second row, no error.
+    assert await follows_repo.follow(alice.id, bob.id) is False
+    assert await follows_repo.count_followers(bob.id) == 1
+    assert await follows_repo.count_following(alice.id) == 1
+
+
+async def test_follow_repo_list_followers_and_following_paginate_without_duplicates(
+    db_session: AsyncSession,
+) -> None:
+    target = await _make_user(db_session, "follow_repo_target")
+    follows_repo = FollowRepository(db_session)
+
+    followers = [await _make_user(db_session, f"follow_repo_follower_{i}") for i in range(3)]
+    for follower in followers:
+        assert await follows_repo.follow(follower.id, target.id) is True
+
+    page_1 = await follows_repo.list_followers(target.id, cursor=None, limit=2)
+    assert len(page_1.items) == 2
+    assert page_1.next_cursor is not None
+
+    cursor = decode_cursor(page_1.next_cursor)
+    page_2 = await follows_repo.list_followers(target.id, cursor=cursor, limit=2)
+    assert len(page_2.items) == 1
+    assert page_2.next_cursor is None
+
+    seen_followers = {f.follower_id for f in page_1.items} | {f.follower_id for f in page_2.items}
+    assert seen_followers == {follower.id for follower in followers}
+
+    # `following` is the symmetric query from the follower's side.
+    following_page = await follows_repo.list_following(followers[0].id, cursor=None, limit=10)
+    assert [edge.followee_id for edge in following_page.items] == [target.id]
+
+
+async def test_follow_repo_follow_is_safe_under_concurrent_duplicate_calls(
+    db_session: AsyncSession,
+) -> None:
+    """Two concurrent `follow()` calls for the same pair, each racing on its
+    own connection/session (a genuine concurrency race, not merely a
+    sequential repeat call), leave exactly one `follows` row: the
+    `SAVEPOINT` in `FollowRepository.follow` catches the loser's
+    primary-key violation instead of raising or corrupting the count.
+    """
+    alice = await _make_user(db_session, "follow_repo_race_alice")
+    bob = await _make_user(db_session, "follow_repo_race_bob")
+    await db_session.commit()
+
+    engine = create_async_engine(TEST_DATABASE_URL)
+    sessionmaker = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+
+    async def _attempt() -> bool:
+        async with sessionmaker() as session:
+            created = await FollowRepository(session).follow(alice.id, bob.id)
+            await session.commit()
+            return created
+
+    try:
+        results = await asyncio.gather(*(_attempt() for _ in range(5)))
+    finally:
+        await engine.dispose()
+
+    # Exactly one of the five concurrent attempts actually created the row.
+    assert sorted(results) == [False, False, False, False, True]
+    assert await FollowRepository(db_session).count_followers(bob.id) == 1
+    assert await FollowRepository(db_session).count_following(alice.id) == 1
 
 
 async def test_notification_unread_count_and_mark_all_read(db_session: AsyncSession) -> None:

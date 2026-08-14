@@ -9,6 +9,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.deps import get_current_user, get_db_session
 from app.models.user import User
+from app.repositories.follows import FollowRepository
 from app.repositories.tweets import TweetRepository
 from app.repositories.users import UserRepository
 from app.schemas.users import (
@@ -28,7 +29,9 @@ router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 
 def _users_service(session: AsyncSession = Depends(get_db_session)) -> UsersService:
-    return UsersService(UserRepository(session), TweetRepository(session))
+    return UsersService(
+        UserRepository(session), TweetRepository(session), FollowRepository(session)
+    )
 
 
 @router.get(
@@ -58,11 +61,21 @@ async def search_users(
 )
 async def get_profile(
     username: str,
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     users_service: UsersService = Depends(_users_service),
 ) -> UserPublicProfile:
-    user = await users_service.get_public_profile(username)
-    return UserPublicProfile.model_validate(user)
+    view = await users_service.get_profile_view(username, current_user)
+    return UserPublicProfile(
+        id=view.user.id,
+        name=view.user.name,
+        username=view.user.username,
+        bio=view.user.bio,
+        avatar_key=view.user.avatar_key,
+        created_at=view.user.created_at,
+        followers_count=view.followers_count,
+        following_count=view.following_count,
+        is_following=view.is_following,
+    )
 
 
 @router.patch(
