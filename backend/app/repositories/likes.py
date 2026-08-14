@@ -7,6 +7,7 @@ needing a check-then-insert race.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import func
@@ -26,6 +27,21 @@ class LikeRepository(BaseRepository[Like]):
 
     async def exists(self, user_id: UUID, tweet_id: UUID) -> bool:
         return await self.get(user_id, tweet_id) is not None
+
+    async def list_liked_tweet_ids(self, user_id: UUID, tweet_ids: Sequence[UUID]) -> set[UUID]:
+        """Which of `tweet_ids` `user_id` has liked — batch form of
+        `exists()`, used to resolve `liked_by_viewer` for a whole page of
+        tweets in one query instead of one per row.
+        """
+        if not tweet_ids:
+            return set()
+        result = await self.session.exec(
+            select(Like.tweet_id).where(
+                Like.user_id == user_id,
+                Like.tweet_id.in_(tweet_ids),  # type: ignore[attr-defined]
+            )
+        )
+        return set(result.all())
 
     async def like(self, user_id: UUID, tweet_id: UUID) -> bool:
         """Insert the like, ignoring the conflict if it already exists.
