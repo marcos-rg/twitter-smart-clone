@@ -4,7 +4,8 @@ Backend resource for notification listing, mark-read, and post-commit Redis
 publication. Trigger wiring — actually *calling* `NotificationsService.create_notification`
 when a follow/like/reply happens — is out of scope here and belongs to the
 tasks that own those actions (`TSC-SOC-*`, `TSC-LIKE-*`, `TSC-TWEET-*`). Live
-WebSocket delivery of the published events is `TSC-NOTIF-004`.
+WebSocket delivery of the published events is
+[`TSC-NOTIF-004`](./websocket-realtime.md).
 
 ## API surface
 
