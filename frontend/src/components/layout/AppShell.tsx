@@ -1,14 +1,17 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
+import { useAuthStore } from '../../stores/auth-store'
 
 export interface AppShellProps {
   children: ReactNode
 }
 
-const navItems = [
+const baseNavItems = [
   { to: '/', label: 'Home', icon: '🏠' },
-  { to: '/lab', label: 'Design Lab', icon: '🧪' },
+  { to: '/search', label: 'Search', icon: '🔍' },
 ]
+
+const labNavItem = { to: '/lab', label: 'Design Lab', icon: '🧪' }
 
 /**
  * Responsive application shell.
@@ -20,6 +23,16 @@ const navItems = [
  * Includes a skip link so keyboard users can jump straight to the content.
  */
 export function AppShell({ children }: AppShellProps) {
+  // "Profile" needs the signed-in user's own username to link to
+  // (TSC-USER-002), so it's only added to the nav once a session is
+  // restored; unauthenticated visitors (e.g. on /login) don't see it.
+  const username = useAuthStore((state) => state.user?.username)
+  const navItems = [
+    ...baseNavItems,
+    ...(username ? [{ to: `/profile/${username}`, label: 'Profile', icon: '👤' }] : []),
+    labNavItem,
+  ]
+
   return (
     <div className="min-h-screen bg-canvas text-foreground">
       <a
