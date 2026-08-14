@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 7 |
+| Done | 8 |
 | In Progress | 0 |
-| To Do | 34 |
+| To Do | 33 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -255,7 +255,7 @@ human-review cadence is:
 <a id="tsc-auth-001"></a>
 ### TSC-AUTH-001 - Implement secure backend authentication
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Implement register, login, access-token validation, rotating
   refresh tokens with reuse response, logout, and current-user endpoints. Email/password
   is the only v1 login method.
