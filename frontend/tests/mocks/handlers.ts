@@ -46,6 +46,42 @@ export const handlers = [
       { status: 401 },
     ),
   ),
+
+  // `/users/*` defaults: `testUser`'s public profile resolves, editing it
+  // echoes the submitted fields back, and timeline/search start empty.
+  // Individual tests override these with `server.use(...)` for conflicts,
+  // other users' profiles, search results, pagination, and error scenarios.
+  http.get(`${API_BASE_URL}/api/v1/users/:username`, ({ params }) => {
+    const username = String(params.username)
+    if (username.toLowerCase() !== testUser.username.toLowerCase()) {
+      return HttpResponse.json(
+        { error: { code: 'not_found', message: 'User not found.' } },
+        { status: 404 },
+      )
+    }
+    const publicProfile = {
+      id: testUser.id,
+      name: testUser.name,
+      username: testUser.username,
+      bio: testUser.bio,
+      avatar_key: testUser.avatar_key,
+      created_at: testUser.created_at,
+    }
+    return HttpResponse.json(publicProfile)
+  }),
+
+  http.patch(`${API_BASE_URL}/api/v1/users/me`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ ...testUser, ...body })
+  }),
+
+  http.get(`${API_BASE_URL}/api/v1/users/:username/tweets`, () =>
+    HttpResponse.json({ data: [], page: { next_cursor: null } }),
+  ),
+
+  http.get(`${API_BASE_URL}/api/v1/users/search`, () =>
+    HttpResponse.json({ data: [], page: { next_cursor: null } }),
+  ),
 ]
 
 export const testUser = {
