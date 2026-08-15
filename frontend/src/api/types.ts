@@ -236,3 +236,74 @@ export interface ConfirmedMedia {
   content_type: string
   size_bytes: number
 }
+
+/**
+ * `/notifications/*` and the WebSocket event envelope (spec §4.2, §6.1,
+ * TSC-NOTIF-001/002/004). `NotificationItem` (REST) and
+ * `NotificationEvent['data']` (live push) are the same shape by design — see
+ * `backend/app/schemas/notifications.py` — so the frontend can render both
+ * with one component and de-duplicate a push against a REST-fetched row by
+ * `notification_id`/`id` alone.
+ */
+export type NotificationType = 'follow' | 'like' | 'reply'
+
+export interface NotificationActor {
+  id: string
+  username: string
+  name: string
+  avatar_key: string | null
+}
+
+export interface NotificationItem {
+  id: string
+  type: NotificationType
+  actor: NotificationActor
+  tweet_id: string | null
+  is_read: boolean
+  created_at: string
+}
+
+export interface NotificationListResponse {
+  data: NotificationItem[]
+  page: PageInfo
+  /** Total unread count for the caller, independent of the current page. */
+  unread_count: number
+}
+
+/** Body of `POST /notifications/read`. Omit `notification_ids` (or send
+ * `null`) to mark every unread notification as read; send an explicit list
+ * (possibly empty) to mark only those ids. */
+export interface NotificationMarkReadRequest {
+  notification_ids?: string[] | null
+}
+
+export interface NotificationMarkReadResponse {
+  marked_read: number
+  unread_count: number
+}
+
+/** The exact JSON envelope pushed down `GET /api/v1/ws` for a live
+ * follow/like/reply event — identical to the Redis payload the backend
+ * publishes (`app.schemas.notifications.NotificationEvent`). `data` is a
+ * strict superset of `NotificationItem` (same fields, `notification_id`
+ * instead of `id`), so it needs no special-casing to render. */
+export interface NotificationEvent {
+  type: 'notification'
+  event: NotificationType
+  data: {
+    notification_id: string
+    recipient_id: string
+    actor: NotificationActor
+    tweet_id: string | null
+    is_read: boolean
+    created_at: string
+  }
+}
+
+/** The one non-notification frame the server sends over the socket — a
+ * liveness check the client must reply to (any inbound text frame counts as
+ * a `pong` server-side, but replying with an explicit `{"type":"pong"}` is
+ * the documented contract). */
+export interface WsPingFrame {
+  type: 'ping'
+}

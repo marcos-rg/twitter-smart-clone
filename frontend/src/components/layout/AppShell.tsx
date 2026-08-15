@@ -1,17 +1,39 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth-store'
+import { useNotificationsStore } from '../../stores/notifications-store'
 
 export interface AppShellProps {
   children: ReactNode
 }
 
-const baseNavItems = [
+interface NavItem {
+  to: string
+  label: string
+  icon: string
+  badge?: number
+}
+
+const baseNavItems: NavItem[] = [
   { to: '/', label: 'Home', icon: '🏠' },
   { to: '/search', label: 'Search', icon: '🔍' },
 ]
 
-const labNavItem = { to: '/lab', label: 'Design Lab', icon: '🧪' }
+const labNavItem: NavItem = { to: '/lab', label: 'Design Lab', icon: '🧪' }
+
+/** Unread-count pill on the Notifications nav item (TSC-NOTIF-002).
+ * Capped at "99+" so a large count never breaks the nav's layout. */
+function UnreadBadge({ count }: { count: number }) {
+  if (count <= 0) return null
+  return (
+    <span
+      aria-hidden="true"
+      className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-xs font-semibold text-white lg:ml-0"
+    >
+      {count > 99 ? '99+' : count}
+    </span>
+  )
+}
 
 /**
  * Responsive application shell.
@@ -27,9 +49,15 @@ export function AppShell({ children }: AppShellProps) {
   // (TSC-USER-002), so it's only added to the nav once a session is
   // restored; unauthenticated visitors (e.g. on /login) don't see it.
   const username = useAuthStore((state) => state.user?.username)
+  const unreadCount = useNotificationsStore((state) => state.unreadCount)
   const navItems = [
     ...baseNavItems,
-    ...(username ? [{ to: `/profile/${username}`, label: 'Profile', icon: '👤' }] : []),
+    ...(username
+      ? [
+          { to: '/notifications', label: 'Notifications', icon: '🔔', badge: unreadCount },
+          { to: `/profile/${username}`, label: 'Profile', icon: '👤' },
+        ]
+      : []),
     labNavItem,
   ]
 
@@ -57,6 +85,13 @@ export function AppShell({ children }: AppShellProps) {
               key={item.to}
               to={item.to}
               end={item.to === '/'}
+              // An explicit `aria-label` when there's an unread count so the
+              // announcement survives every breakpoint — the visible label
+              // text is `hidden` below `lg`, and the icon-only breakpoint's
+              // `sr-only` fallback would otherwise itself go `lg:hidden` at
+              // the *wide* end, silently dropping the unread count from a
+              // desktop screen reader user's accessible name.
+              aria-label={item.badge ? `${item.label}, ${item.badge} unread` : undefined}
               className={({ isActive }) =>
                 [
                   'flex items-center gap-3 rounded-full px-3 py-2 text-base transition-colors duration-150 motion-reduce:transition-none',
@@ -67,8 +102,13 @@ export function AppShell({ children }: AppShellProps) {
               }
             >
               <span aria-hidden="true">{item.icon}</span>
-              <span className="hidden lg:inline">{item.label}</span>
-              <span className="sr-only lg:hidden">{item.label}</span>
+              <span className="hidden lg:inline" aria-hidden={item.badge ? true : undefined}>
+                {item.label}
+              </span>
+              <span className="sr-only lg:hidden" aria-hidden={item.badge ? true : undefined}>
+                {item.label}
+              </span>
+              {item.badge ? <UnreadBadge count={item.badge} /> : null}
             </NavLink>
           ))}
         </nav>
@@ -87,15 +127,23 @@ export function AppShell({ children }: AppShellProps) {
             key={item.to}
             to={item.to}
             end={item.to === '/'}
-            aria-label={item.label}
+            aria-label={item.badge ? `${item.label}, ${item.badge} unread` : item.label}
             className={({ isActive }) =>
               [
-                'rounded-full p-3 text-xl transition-colors duration-150 motion-reduce:transition-none',
+                'relative rounded-full p-3 text-xl transition-colors duration-150 motion-reduce:transition-none',
                 isActive ? 'bg-surface-hover' : 'hover:bg-surface-hover',
               ].join(' ')
             }
           >
             <span aria-hidden="true">{item.icon}</span>
+            {item.badge ? (
+              <span
+                aria-hidden="true"
+                className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-white"
+              >
+                {item.badge > 99 ? '99+' : item.badge}
+              </span>
+            ) : null}
           </NavLink>
         ))}
       </nav>

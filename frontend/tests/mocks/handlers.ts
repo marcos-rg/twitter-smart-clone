@@ -169,6 +169,17 @@ export const handlers = [
   http.get(`${API_BASE_URL}/api/v1/feed`, () =>
     HttpResponse.json({ data: [], page: { next_cursor: null } }),
   ),
+
+  // `/notifications*` defaults (TSC-NOTIF-002): empty list, nothing unread.
+  // Individual tests override with `server.use(...)` for populated
+  // fixtures, pagination, and error scenarios.
+  http.get(`${API_BASE_URL}/api/v1/notifications`, () =>
+    HttpResponse.json({ data: [], page: { next_cursor: null }, unread_count: 0 }),
+  ),
+
+  http.post(`${API_BASE_URL}/api/v1/notifications/read`, () =>
+    HttpResponse.json({ marked_read: 0, unread_count: 0 }),
+  ),
 ]
 
 export const testUser = {
