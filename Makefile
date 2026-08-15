@@ -3,10 +3,32 @@
 COMPOSE := docker compose -f docker-compose.yml -f docker-compose.dev.yml
 COMPOSE_E2E := $(COMPOSE) -f docker-compose.e2e.yml
 
-.PHONY: help up down build ps logs lint test seed migrate e2e-auth
+.PHONY: help init up down build ps logs lint test seed migrate e2e-auth
 
 help: ## Show this help.
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t/' | sort
+
+init: ## First-time setup: .env, build, start, wait healthy, migrate, seed.
+	@test -f .env || cp .env.example .env
+	$(COMPOSE) up -d --build
+	@echo "Waiting for services to report healthy..."
+	@for i in $$(seq 1 30); do \
+		statuses=$$($(COMPOSE) ps --format '{{.Service}} {{.State}} {{.Health}}'); \
+		echo "$$statuses"; \
+		if echo "$$statuses" | awk 'BEGIN { seen=0 } { seen=1; if ($$2 != "running") exit 1; if ($$3 != "" && $$3 != "healthy") exit 1 } END { if (!seen) exit 1 }'; then \
+			echo "All services running/healthy."; \
+			break; \
+		fi; \
+		if [ "$$i" = "30" ]; then echo "Timed out waiting for services to become healthy." >&2; $(COMPOSE) logs; exit 1; fi; \
+		sleep 5; \
+	done
+	$(MAKE) migrate
+	$(MAKE) seed
+	@echo ""
+	@echo "Stack is up: frontend http://localhost:5173, backend http://localhost:8000."
+	@echo "Image uploads (avatar / tweet images) sign against the internal 'minio' hostname,"
+	@echo "so add this line to /etc/hosts or the browser can't resolve the upload URL:"
+	@echo "  127.0.0.1 minio"
 
 up: ## Build (if needed) and start the full local stack in the background.
 	$(COMPOSE) up -d --build
