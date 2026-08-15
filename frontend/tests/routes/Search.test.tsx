@@ -8,10 +8,12 @@ import { server } from '../mocks/server'
 import { testUser } from '../mocks/handlers'
 
 /**
- * Search screen integration tests (TSC-USER-002): mode selection, debounced
- * query, loading/no-results/error/pagination states, and that a fast-typed
- * later query is what actually renders (no stale results from an earlier,
- * slower in-flight request).
+ * Search screen integration tests (TSC-USER-002): debounced query,
+ * loading/no-results/error/pagination states, and that a fast-typed later
+ * query is what actually renders (no stale results from an earlier, slower
+ * in-flight request). The search-mode strategy (prefix/exact/fuzzy) is an
+ * internal implementation detail — never exposed as UI the user has to
+ * choose between.
  */
 
 function mockAuthenticatedSession() {
@@ -62,7 +64,7 @@ describe('Search', () => {
     expect(screen.queryByRole('status', { name: 'Loading user' })).not.toBeInTheDocument()
   })
 
-  it('defaults to prefix mode, searches on typing (debounced), and renders results', async () => {
+  it('searches on typing (debounced) using prefix mode, without exposing that choice in the UI', async () => {
     mockAuthenticatedSession()
     let receivedMode: string | null = null
     server.use(
@@ -86,42 +88,11 @@ describe('Search', () => {
     const user = userEvent.setup()
     await goToSearch(user)
 
-    expect(screen.getByRole('radio', { name: 'Prefix' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument()
     await user.type(screen.getByLabelText('Search people'), 'al')
 
     expect(await screen.findByText('Alice Prefix')).toBeInTheDocument()
     await waitFor(() => expect(receivedMode).toBe('prefix'))
-  })
-
-  it('switching mode re-queries with the new mode for the same text', async () => {
-    mockAuthenticatedSession()
-    server.use(
-      http.get('*/api/v1/users/search', ({ request }) => {
-        const url = new URL(request.url)
-        const mode = url.searchParams.get('mode')
-        return HttpResponse.json({
-          data: [
-            {
-              id: `user-${mode}`,
-              name: `Match (${mode})`,
-              username: `match_${mode}`,
-              bio: null,
-              avatar_key: null,
-            },
-          ],
-          page: { next_cursor: null },
-        })
-      }),
-    )
-    const user = userEvent.setup()
-    await goToSearch(user)
-
-    await user.type(screen.getByLabelText('Search people'), 'ada')
-    expect(await screen.findByText('Match (prefix)')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('radio', { name: 'Exact' }))
-    expect(await screen.findByText('Match (exact)')).toBeInTheDocument()
-    expect(screen.queryByText('Match (prefix)')).not.toBeInTheDocument()
   })
 
   it('shows a no-results empty state', async () => {
