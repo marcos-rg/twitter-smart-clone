@@ -103,7 +103,7 @@ export function TweetComposer({
     <form
       onSubmit={(event) => void handleSubmit(event)}
       aria-label={isReply ? 'Reply composer' : 'Tweet composer'}
-      className="flex gap-3 border-b border-border px-4 py-4"
+      className="flex gap-3 border-b-2 border-border-strong bg-surface-raised px-4 py-4 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.03)]"
     >
       {/* Decorative: the signed-in user's identity is already established
           elsewhere on every screen that renders this composer (profile
