@@ -6,13 +6,16 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
   error?: string
   /** Optional helper text shown below the textarea when there is no error. */
   hint?: string
+  /** Visually hides the label (still in the accessibility tree via sr-only)
+   * for compact, placeholder-led layouts like the tweet composer. */
+  hideLabel?: boolean
 }
 
 /**
  * Labelled multi-line input with the same error/hint wiring as Input.
  */
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { label, error, hint, id, className = '', rows = 3, ...rest },
+  { label, error, hint, hideLabel, id, className = '', rows = 3, ...rest },
   ref,
 ) {
   const autoId = useId()
@@ -21,8 +24,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   const hasMessage = Boolean(error || hint)
 
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={textareaId} className="text-sm font-semibold text-foreground">
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={textareaId}
+        className={hideLabel ? 'sr-only' : 'text-sm font-semibold text-foreground'}
+      >
         {label}
       </label>
       <textarea
@@ -32,8 +38,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
         aria-invalid={error ? true : undefined}
         aria-describedby={hasMessage ? messageId : undefined}
         className={[
-          'resize-y rounded-control border bg-surface px-3 py-2 text-foreground transition-colors duration-150 motion-reduce:transition-none',
-          error ? 'border-danger' : 'border-border hover:border-muted focus:border-brand',
+          'resize-y rounded-control border bg-surface px-3.5 py-2.5 text-foreground shadow-sm transition-colors duration-150 motion-reduce:transition-none',
+          error ? 'border-danger' : 'border-border hover:border-border-strong focus:border-brand',
           className,
         ].join(' ')}
         {...rest}

@@ -91,11 +91,11 @@ export function Tabs({ tabs, defaultTab, 'aria-label': ariaLabel }: TabsProps) {
               disabled={tab.disabled}
               onClick={() => setActiveId(tab.id)}
               className={[
-                'cursor-pointer px-4 py-2 text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none',
+                'relative cursor-pointer px-4 py-3 text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none',
                 'disabled:cursor-not-allowed disabled:opacity-50',
                 selected
-                  ? 'border-b-2 border-brand text-foreground'
-                  : 'text-muted hover:bg-surface-hover hover:text-foreground',
+                  ? 'text-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-[3px] after:rounded-full after:bg-brand'
+                  : 'text-muted hover:bg-surface-hover/60 hover:text-foreground',
               ].join(' ')}
             >
               {tab.label}

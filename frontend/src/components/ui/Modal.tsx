@@ -71,7 +71,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm motion-safe:animate-[fade-in_150ms_ease-out]"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
@@ -82,7 +82,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="w-full max-w-md rounded-card border border-border bg-canvas p-6 shadow-xl"
+        className="w-full max-w-md rounded-card border border-border bg-surface-raised p-6 shadow-panel motion-safe:animate-[fade-in_200ms_ease-out]"
       >
         <h2 id={titleId}>{title}</h2>
         <div className="mt-4">{children}</div>
