@@ -1,5 +1,7 @@
 # twitter-smart-clone
 
+[![CI](https://github.com/marcos-rg/twitter-smart-clone/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/marcos-rg/twitter-smart-clone/actions/workflows/ci.yml)
+
 A Twitter-like social app: users register, publish short text/image posts
 ("tweets"), follow each other, reply, like, and get realtime notifications.
 It's built as a portfolio/challenge project — the goal is a clean,
@@ -32,6 +34,27 @@ Backend: FastAPI + SQLModel + PostgreSQL + Redis + Celery. Frontend: React
 See [`specification/specification.md`](./specification/specification.md) for
 the full technical spec and [`specification/tasks.md`](./specification/tasks.md)
 for the implementation task list (30 done, 11 to do as of this writing).
+
+## CI & test coverage
+
+The [`CI` workflow](./.github/workflows/ci.yml) runs on every push/PR to
+`main`: build both dev images, backend format/lint/type/test
+(`ruff`, `black --check`, `mypy`, `pytest` + coverage gate), frontend
+format/lint/type/test (`eslint`, `prettier --check`, `tsc`, `vitest` +
+coverage gate), a `gitleaks` secret scan, and a Compose smoke test
+(build the stack, wait for every service to report healthy, hit the
+health/readiness endpoints). The auth E2E job (`Playwright`, three
+consecutive full-stack runs) is currently commented out in the workflow.
+
+Coverage measured locally against this branch, same commands CI runs:
+
+| | Statements | Branches | Functions | Lines | Gate |
+| --- | --- | --- | --- | --- | --- |
+| Backend (`pytest` + `coverage`) | 98% | — | — | 98% | `fail_under = 90` |
+| Frontend (`vitest --coverage`) | 91.08% | 84.85% | 88.36% | 92.35% | 50% on all four metrics |
+
+Reproduce locally with `make test` (runs both suites with their coverage
+gates inside containers).
 
 ## Roadmap
 
