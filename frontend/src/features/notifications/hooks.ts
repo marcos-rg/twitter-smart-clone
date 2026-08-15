@@ -61,17 +61,39 @@ function findCachedNotification(
   return undefined
 }
 
-/** Applies a live WebSocket `NotificationEvent` to the cached list: prepends
- * it to the first cached page and bumps the unread badge — but only when
- * `notification_id` isn't already present anywhere in the cache, so a
- * follow/like/reply event that arrives live and is later also returned by a
- * REST fetch (e.g. the reconcile-after-reconnect refetch) renders exactly
- * once (acceptance criterion). A no-op if the list has never been fetched —
- * nothing cached to prepend into; the next `GET /notifications` picks it up
- * naturally since it's already durably persisted server-side. */
+/** De-duplicates live events independently of the `['notifications']` list
+ * cache, which may not exist yet (the panel is never opened before the
+ * first push arrives) or may no longer contain an older item (evicted by
+ * pagination). Session-scoped: cleared on logout by `useNotificationsSocket`
+ * so a new sign-in on the same tab starts with a clean slate. */
+const seenLiveNotificationIds = new Set<string>()
+
+export function resetLiveNotificationDedupe(): void {
+  seenLiveNotificationIds.clear()
+}
+
+/** Applies a live WebSocket `NotificationEvent`: bumps the unread badge and,
+ * if the list has already been fetched at least once, prepends it to the
+ * first cached page too — but only when `notification_id` isn't already
+ * known (checked against both the cached list, for an item returned by
+ * REST, and `seenLiveNotificationIds`, for a duplicate live redelivery with
+ * no cache to check against), so a follow/like/reply event renders/counts
+ * exactly once (acceptance criterion).
+ *
+ * The badge bump does **not** depend on the list cache existing — it used
+ * to (via `setQueryData`'s return value), which meant a signed-in user who
+ * never opened the notifications panel never saw the badge move at all,
+ * since `['notifications']` isn't fetched until `useNotifications` first
+ * mounts. A live push is definitionally new information the moment it
+ * arrives over the socket, cache or no cache, so the badge always counts
+ * it; when the list is later fetched for the first time, its own
+ * server-authoritative `unread_count` reconciles the badge to the true
+ * value regardless. */
 export function applyNotificationEvent(queryClient: QueryClient, event: NotificationEvent): void {
   const { data } = event
   if (findCachedNotification(queryClient, data.notification_id)) return
+  if (seenLiveNotificationIds.has(data.notification_id)) return
+  seenLiveNotificationIds.add(data.notification_id)
 
   const item: NotificationItem = {
     id: data.notification_id,
@@ -82,7 +104,7 @@ export function applyNotificationEvent(queryClient: QueryClient, event: Notifica
     created_at: data.created_at,
   }
 
-  const patched = queryClient.setQueryData<InfiniteData<NotificationListResponse> | undefined>(
+  queryClient.setQueryData<InfiniteData<NotificationListResponse> | undefined>(
     notificationsQueryKey(),
     (current) => {
       if (!current || current.pages.length === 0) return current
@@ -93,10 +115,7 @@ export function applyNotificationEvent(queryClient: QueryClient, event: Notifica
       }
     },
   )
-  // Only bump the badge if there was a cache to patch into and the item
-  // wasn't already there (checked above) — otherwise the badge would drift
-  // from the server-authoritative count a later fetch will restore anyway.
-  if (patched) useNotificationsStore.getState().increment()
+  useNotificationsStore.getState().increment()
 }
 
 function patchNotificationsRead(queryClient: QueryClient, ids: Set<string> | 'all'): void {
@@ -180,6 +199,7 @@ export function useNotificationsSocket(): void {
     if (status !== 'authenticated') {
       useNotificationsStore.getState().reset()
       queryClient.removeQueries({ queryKey: notificationsQueryKey() })
+      resetLiveNotificationDedupe()
       return
     }
 

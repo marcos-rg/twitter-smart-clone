@@ -69,15 +69,26 @@ atomically on logout than to reach into an arbitrary query cache shape.
   fresh first page lands (initial load, manual refetch, or the
   reconcile-after-reconnect refetch below).
 - **`applyNotificationEvent(queryClient, event)`**: applies a live WebSocket
-  event to the cache — prepends it to the first cached page and bumps the
-  unread count, but **only if `notification_id` isn't already present
-  anywhere in the cache**. This is the de-duplication acceptance criterion:
-  a follow/like/reply event that arrives live and is *also* later returned
-  by a REST fetch (e.g. the reconcile-after-reconnect refetch, or simply
-  opening the panel after the live push already landed) renders exactly
-  once. A no-op if the list has never been fetched — nothing cached to
-  prepend into; the event is already durably persisted server-side, so the
-  next `GET /notifications` picks it up naturally.
+  event — bumps the unread count, and, if the list has already been fetched
+  at least once, prepends it to the first cached page too. De-duplicated
+  against both the cached list (an item also returned by REST) and a
+  session-scoped `seenLiveNotificationIds` set (a duplicate live
+  redelivery, e.g. after a reconnect, with no cache to check against), so a
+  follow/like/reply event renders/counts exactly once (acceptance
+  criterion). `resetLiveNotificationDedupe()` clears that set on logout.
+
+  **Bug fixed during this task's review**: the badge bump originally rode
+  on `queryClient.setQueryData`'s return value, which is only truthy when
+  there was an existing `['notifications']` cache entry to patch — but that
+  cache doesn't exist until `useNotifications` (i.e. the panel) has been
+  mounted at least once. The practical effect: a signed-in user who never
+  opened the notifications panel never saw the unread badge move at all,
+  no matter how many live events arrived — reported directly after the
+  first pass shipped ("I only start getting notifications if I click the
+  notification page"). Fixed by decoupling the badge bump from whether a
+  list cache exists to prepend into; a live push is new information the
+  moment it arrives regardless, and the list's own next fetch reconciles
+  the badge to the server-authoritative `unread_count` either way.
 - **`useMarkAllNotificationsRead()` / `useMarkSelectedNotificationsRead()`**:
   mutations wrapping `POST /notifications/read`, patching every matching
   cached row's `is_read` and syncing the store's `unreadCount` from the
@@ -155,8 +166,11 @@ anything.
   reconnect timer (no leak).
 - **Vitest + RTL + MSW** (`tests/features/notifications/hooks.test.tsx`):
   `applyNotificationEvent`'s de-duplication (exactly-once rendering of an
-  event already present from REST) and the mark-all/mark-selected
-  mutations' cache fan-out and idempotency, against a bare `QueryClient`.
+  event already present from REST, and exactly-once badge-counting of a
+  duplicate live redelivery even with no list cache to check against) and
+  the mark-all/mark-selected mutations' cache fan-out and idempotency,
+  against a bare `QueryClient`. Includes the regression test for the
+  badge-doesn't-move-without-opening-the-panel bug above.
 - **Vitest + RTL** (`tests/features/notifications/useNotificationsSocket.test.tsx`):
   the socket bridge's lifecycle — no connection while unauthenticated,
   connects with the current access token once authenticated, unmount
@@ -186,8 +200,8 @@ npm run lint            # eslint . — clean (pre-existing App.tsx fast-refresh 
 npm run typecheck       # tsc -b --noEmit — clean
 npm run format:check    # prettier --check . — clean (pre-existing e2e/feed.spec.ts,
                         # e2e/tweets.spec.ts warnings predate this task)
-npm run test:coverage   # vitest run --coverage — 206 tests passed,
-                        # 90.81% stmts / 85.12% branch / 88.17% funcs / 92.13% lines
+npm run test:coverage   # vitest run --coverage — 207 tests passed,
+                        # 90.84% stmts / 85.19% branch / 88.20% funcs / 92.17% lines
 npm run e2e             # npm run build && playwright test — 47 passed, incl.
                         # 7 new notifications screenshots/assertions
 ```

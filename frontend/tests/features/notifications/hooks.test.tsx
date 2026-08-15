@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   applyNotificationEvent,
   notificationsQueryKey,
+  resetLiveNotificationDedupe,
   useMarkAllNotificationsRead,
   useMarkSelectedNotificationsRead,
 } from '../../../src/features/notifications/hooks'
@@ -86,6 +87,7 @@ function wrapper(queryClient: QueryClient) {
 describe('applyNotificationEvent', () => {
   beforeEach(() => {
     useNotificationsStore.getState().reset()
+    resetLiveNotificationDedupe()
   })
 
   it('prepends a live event to the cached first page and bumps the unread badge', () => {
@@ -112,11 +114,30 @@ describe('applyNotificationEvent', () => {
     expect(useNotificationsStore.getState().unreadCount).toBe(0)
   })
 
-  it('is a no-op when the list has never been fetched (nothing cached to prepend into)', () => {
+  it('still bumps the unread badge when the list has never been fetched (e.g. the panel was never opened), even though there is nothing to prepend into', () => {
+    // Regression test: the badge used to only bump when `setQueryData`
+    // actually patched an existing list cache, so a signed-in user who
+    // never opened the notifications panel never saw the badge move at all
+    // — reported after this task's first pass shipped.
     const queryClient = makeClient()
 
     expect(() => applyNotificationEvent(queryClient, makeEvent('notif-1'))).not.toThrow()
+
     expect(queryClient.getQueryData(notificationsQueryKey())).toBeUndefined()
+    expect(useNotificationsStore.getState().unreadCount).toBe(1)
+  })
+
+  it('does not double-bump the badge for a duplicate live redelivery even without a list cache', () => {
+    // De-duplicated via the session-scoped `seenLiveNotificationIds` set
+    // (not just the query cache), since a redelivered event after a
+    // reconnect could otherwise double-count the badge before the panel
+    // has ever been opened.
+    const queryClient = makeClient()
+
+    applyNotificationEvent(queryClient, makeEvent('notif-1'))
+    applyNotificationEvent(queryClient, makeEvent('notif-1'))
+
+    expect(useNotificationsStore.getState().unreadCount).toBe(1)
   })
 })
 
