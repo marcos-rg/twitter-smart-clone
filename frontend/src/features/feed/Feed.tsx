@@ -91,8 +91,10 @@ export function Feed() {
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="text-base font-extrabold tracking-tight">Home</h2>
+      <TweetComposer prependToFeed placeholder="What's happening?" />
+
+      <div className="flex items-center justify-between px-4 py-2">
+        <p className="text-sm font-semibold text-muted">Recent tweets</p>
         <Button
           variant="ghost"
           size="sm"
@@ -103,8 +105,6 @@ export function Feed() {
           Refresh
         </Button>
       </div>
-
-      <TweetComposer prependToFeed placeholder="What's happening?" />
 
       {feed.isLoading ? (
         <>
