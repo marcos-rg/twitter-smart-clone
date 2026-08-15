@@ -2,14 +2,7 @@ import type { ReactElement, ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuthStore } from '../../stores/auth-store'
 import { useNotificationsStore } from '../../stores/notifications-store'
-import {
-  BellIcon,
-  HomeIcon,
-  Logomark,
-  SearchIcon,
-  UserIcon,
-  type IconProps,
-} from '../ui/icons'
+import { BellIcon, HomeIcon, Logomark, SearchIcon, UserIcon, type IconProps } from '../ui/icons'
 
 export interface AppShellProps {
   children: ReactNode

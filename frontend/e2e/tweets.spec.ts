@@ -161,7 +161,9 @@ for (const bp of breakpoints) {
 
     await expect(page.getByText('A tweet with an attached image')).toBeVisible()
     await expect(page.getByLabel('Post your reply')).toBeVisible()
-    await expect(page.getByText('Fascinating — how does it handle carry propagation?')).toBeVisible()
+    await expect(
+      page.getByText('Fascinating — how does it handle carry propagation?'),
+    ).toBeVisible()
     await expect(page.getByRole('link', { name: 'https://example.com/notes' })).toBeVisible()
     await expectNoHorizontalOverflow(page)
 

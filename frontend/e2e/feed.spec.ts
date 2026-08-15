@@ -158,7 +158,9 @@ for (const bp of breakpoints) {
   })
 }
 
-test('refresh replaces the feed with a fresh first page without a full reload', async ({ page }) => {
+test('refresh replaces the feed with a fresh first page without a full reload', async ({
+  page,
+}) => {
   await mockAuthenticatedApi(page)
   let refreshed = false
   await page.route('**/api/v1/feed*', (route) => {
