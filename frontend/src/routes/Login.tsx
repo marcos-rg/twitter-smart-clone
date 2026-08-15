@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useToast } from '../components/ui'
+import { Logomark, useToast } from '../components/ui'
 import { LoginForm } from '../features/auth/LoginForm'
 import { useAuthStore } from '../stores/auth-store'
 
@@ -37,15 +37,22 @@ export function Login() {
   }
 
   return (
-    <div className="mx-auto flex max-w-sm flex-col gap-6 px-4 py-10">
-      <header>
-        <h1>Log in</h1>
-        <p className="mt-1 text-sm text-muted">Welcome back.</p>
-      </header>
-      <LoginForm onSuccess={handleSuccess} initialEmail={state?.prefillEmail ?? ''} />
-      <p className="text-sm text-muted">
-        Don&apos;t have an account? <Link to="/register">Sign up</Link>
-      </p>
+    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-10 sm:min-h-screen">
+      <div className="w-full max-w-sm rounded-card border border-border bg-surface/60 p-8 shadow-card">
+        <header className="flex flex-col items-center gap-3 text-center">
+          <Logomark className="size-11" />
+          <div>
+            <h1>Log in</h1>
+            <p className="mt-1 text-sm text-muted">Welcome back.</p>
+          </div>
+        </header>
+        <div className="mt-6">
+          <LoginForm onSuccess={handleSuccess} initialEmail={state?.prefillEmail ?? ''} />
+        </div>
+        <p className="mt-6 text-center text-sm text-muted">
+          Don&apos;t have an account? <Link to="/register">Sign up</Link>
+        </p>
+      </div>
     </div>
   )
 }
