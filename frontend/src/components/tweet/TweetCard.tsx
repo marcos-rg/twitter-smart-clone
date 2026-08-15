@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Avatar } from '../ui/Avatar'
 import { Skeleton } from '../ui/Skeleton'
+import { MessageCircleIcon } from '../ui/icons'
 import { resolveMediaUrl } from '../../api/media'
 import { LikeButton } from '../../features/tweets/LikeButton'
 import { linkifyContent } from './linkify'
@@ -39,11 +40,11 @@ export function TweetCard({ tweet }: TweetCardProps) {
     <article
       aria-label={`Tweet by ${author.name}`}
       onClick={() => navigate(detailPath)}
-      className="flex cursor-pointer gap-3 border-b border-border px-4 py-3 transition-colors duration-150 hover:bg-surface-hover/40 motion-reduce:transition-none"
+      className="flex cursor-pointer gap-3 border-b border-border px-4 py-3.5 transition-colors duration-150 hover:bg-surface-hover/50 motion-reduce:transition-none"
     >
       <Avatar name={author.name} src={resolveMediaUrl(author.avatar_key)} />
       <div className="min-w-0 flex-1">
-        <header className="flex flex-wrap items-baseline gap-x-2">
+        <header className="flex flex-wrap items-baseline gap-x-1.5">
           <Link
             to={`/profile/${author.username}`}
             onClick={(event) => event.stopPropagation()}
@@ -63,7 +64,7 @@ export function TweetCard({ tweet }: TweetCardProps) {
             <time dateTime={tweet.created_at}>{formatTimestamp(tweet.created_at)}</time>
           </Link>
         </header>
-        <p className="mt-1 break-words whitespace-pre-wrap text-foreground">
+        <p className="mt-0.5 break-words whitespace-pre-wrap text-foreground">
           {segments.map((segment, index) =>
             segment.type === 'link' ? (
               <a
@@ -82,7 +83,7 @@ export function TweetCard({ tweet }: TweetCardProps) {
           )}
         </p>
         <TweetImageGallery media={tweet.media} />
-        <footer className="mt-2 flex max-w-xs justify-between text-sm text-muted">
+        <footer className="mt-2.5 flex max-w-xs justify-between text-sm text-muted">
           <button
             type="button"
             aria-label={`Reply, ${tweet.reply_count} replies`}
@@ -90,10 +91,10 @@ export function TweetCard({ tweet }: TweetCardProps) {
               event.stopPropagation()
               navigate(detailPath)
             }}
-            className="flex cursor-pointer items-center gap-1 rounded-full px-2 py-1 transition-colors duration-150 hover:bg-brand-soft hover:text-brand motion-reduce:transition-none"
+            className="flex cursor-pointer items-center gap-1.5 rounded-full px-2 py-1.5 transition-colors duration-150 hover:bg-brand-soft hover:text-brand motion-reduce:transition-none"
           >
-            <span aria-hidden="true">💬</span>
-            <span aria-hidden="true">{tweet.reply_count}</span>
+            <MessageCircleIcon className="size-[18px]" />
+            <span>{tweet.reply_count}</span>
           </button>
           <LikeButton tweet={tweet} />
         </footer>
