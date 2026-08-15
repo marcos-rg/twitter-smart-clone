@@ -36,9 +36,14 @@ describe('AppShell', () => {
   })
 
   it('marks the current route as active', () => {
-    setup('/lab')
-    const labLinks = screen.getAllByRole('link', { name: /design lab/i })
-    expect(labLinks.some((link) => link.getAttribute('aria-current') === 'page')).toBe(true)
+    setup('/search')
+    const searchLinks = screen.getAllByRole('link', { name: /search/i })
+    expect(searchLinks.some((link) => link.getAttribute('aria-current') === 'page')).toBe(true)
+  })
+
+  it('does not link to the internal design lab route', () => {
+    setup()
+    expect(screen.queryByRole('link', { name: /design lab/i })).not.toBeInTheDocument()
   })
 
   it('has no accessibility violations', async () => {

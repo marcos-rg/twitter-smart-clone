@@ -4,7 +4,6 @@ import { useAuthStore } from '../../stores/auth-store'
 import { useNotificationsStore } from '../../stores/notifications-store'
 import {
   BellIcon,
-  FlaskIcon,
   HomeIcon,
   Logomark,
   SearchIcon,
@@ -27,8 +26,6 @@ const baseNavItems: NavItem[] = [
   { to: '/', label: 'Home', Icon: HomeIcon },
   { to: '/search', label: 'Search', Icon: SearchIcon },
 ]
-
-const labNavItem: NavItem = { to: '/lab', label: 'Design Lab', Icon: FlaskIcon }
 
 /** Unread-count pill on the Notifications nav item (TSC-NOTIF-002).
  * Capped at "99+" so a large count never breaks the nav's layout. */
@@ -80,7 +77,6 @@ export function AppShell({ children }: AppShellProps) {
           { to: `/profile/${username}`, label: 'Profile', Icon: UserIcon },
         ]
       : []),
-    labNavItem,
   ]
 
   return (
