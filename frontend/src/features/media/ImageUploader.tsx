@@ -1,5 +1,6 @@
 import { useId, useRef } from 'react'
 import { Button } from '../../components/ui'
+import { ChevronLeftIcon, ChevronRightIcon, ImagePlusIcon } from '../../components/ui/icons'
 import { useImageUploader, type UseImageUploaderOptions } from './useImageUploader'
 import type { UploadItem } from './types'
 
@@ -59,6 +60,7 @@ export function ImageUploader({ label, ...options }: ImageUploaderProps) {
           disabled={atMax}
           onClick={() => inputRef.current?.click()}
         >
+          <ImagePlusIcon className="size-4" />
           {items.length === 0 ? 'Add images' : 'Add more images'}
         </Button>
         <p className="mt-1 text-xs text-muted">
@@ -137,7 +139,7 @@ export function ImageUploader({ label, ...options }: ImageUploaderProps) {
                       disabled={index === 0}
                       onClick={() => moveItem(item.id, -1)}
                     >
-                      ←
+                      <ChevronLeftIcon className="size-4" />
                     </Button>
                     <Button
                       type="button"
@@ -147,7 +149,7 @@ export function ImageUploader({ label, ...options }: ImageUploaderProps) {
                       disabled={index === items.length - 1}
                       onClick={() => moveItem(item.id, 1)}
                     >
-                      →
+                      <ChevronRightIcon className="size-4" />
                     </Button>
                   </>
                 ) : null}

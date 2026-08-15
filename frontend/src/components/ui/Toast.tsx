@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { ToastContext, type ToastVariant } from './toast-context'
+import { CheckCircleIcon, InfoIcon, XIcon, AlertCircleIcon } from './icons'
 
 interface ToastItem {
   id: number
@@ -8,9 +9,22 @@ interface ToastItem {
 }
 
 const variantClasses: Record<ToastVariant, string> = {
-  info: 'border-brand text-foreground',
-  success: 'border-success text-foreground',
-  error: 'border-danger text-foreground',
+  info: 'border-border-strong text-foreground',
+  success: 'border-success/40 text-foreground',
+  error: 'border-danger/40 text-foreground',
+}
+
+const variantIconClasses: Record<ToastVariant, string> = {
+  info: 'text-brand',
+  success: 'text-success',
+  error: 'text-danger',
+}
+
+function ToastIcon({ variant }: { variant: ToastVariant }) {
+  const className = `size-5 shrink-0 ${variantIconClasses[variant]}`
+  if (variant === 'success') return <CheckCircleIcon className={className} />
+  if (variant === 'error') return <AlertCircleIcon className={className} />
+  return <InfoIcon className={className} />
 }
 
 const AUTO_DISMISS_MS = 5000
@@ -49,16 +63,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             role={t.variant === 'error' ? 'alert' : 'status'}
-            className={`pointer-events-auto flex w-full max-w-sm items-center justify-between gap-3 rounded-control border bg-surface px-4 py-3 text-sm shadow-lg ${variantClasses[t.variant]}`}
+            className={`pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-control border bg-surface-raised px-4 py-3 text-sm shadow-panel motion-safe:animate-[fade-in_200ms_ease-out] ${variantClasses[t.variant]}`}
           >
-            <span>{t.message}</span>
+            <ToastIcon variant={t.variant} />
+            <span className="flex-1">{t.message}</span>
             <button
               type="button"
               onClick={() => dismiss(t.id)}
               aria-label="Dismiss notification"
-              className="cursor-pointer text-muted hover:text-foreground"
+              className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition-colors duration-150 hover:bg-surface-hover hover:text-foreground motion-reduce:transition-none"
             >
-              ✕
+              <XIcon className="size-3.5" />
             </button>
           </div>
         ))}

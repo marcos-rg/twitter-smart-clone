@@ -1,25 +1,25 @@
 import { useState } from 'react'
 import { Button, EmptyState, ErrorState, Input } from '../components/ui'
-import { SearchModeSelector } from '../features/users/SearchModeSelector'
 import { UserCard, UserCardSkeleton } from '../features/users/UserCard'
 import { describeUsersError, useUserSearch } from '../features/users/hooks'
 import { useDebouncedValue } from '../lib/useDebouncedValue'
-import type { SearchMode } from '../api/types'
 
 const SEARCH_DEBOUNCE_MS = 300
 
+/** Matching strategy used for every search — an internal implementation
+ * detail (prefix/exact/fuzzy on the backend), not something the user
+ * should have to think about or choose between. */
+const SEARCH_MODE = 'prefix'
+
 /**
- * User search screen: query input, exact/prefix/fuzzy mode selection, and
- * cursor-paginated results. The query is debounced before it drives the
- * network request; mode changes apply immediately (no debounce) since they
- * aren't typed input.
+ * User search screen: query input and cursor-paginated results. The query
+ * is debounced before it drives the network request.
  */
 export function Search() {
   const [rawQuery, setRawQuery] = useState('')
-  const [mode, setMode] = useState<SearchMode>('prefix')
   const debouncedQuery = useDebouncedValue(rawQuery, SEARCH_DEBOUNCE_MS)
 
-  const search = useUserSearch(debouncedQuery, mode)
+  const search = useUserSearch(debouncedQuery, SEARCH_MODE)
   const hasTypedQuery = rawQuery.trim().length > 0
   const items = search.data?.pages.flatMap((page) => page.data) ?? []
   // True while the debounce timer is pending for the latest keystroke, or
@@ -39,7 +39,6 @@ export function Search() {
         onChange={(event) => setRawQuery(event.target.value)}
         autoComplete="off"
       />
-      <SearchModeSelector value={mode} onChange={setMode} />
 
       <div>
         {!hasTypedQuery ? (
@@ -60,10 +59,7 @@ export function Search() {
             onRetry={() => void search.refetch()}
           />
         ) : items.length === 0 ? (
-          <EmptyState
-            title="No users found"
-            description={`No results for "${debouncedQuery}" in ${mode} mode.`}
-          />
+          <EmptyState title="No users found" description={`No results for "${debouncedQuery}".`} />
         ) : (
           <>
             {items.map((user) => (

@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
-import { Button } from '../components/ui'
+import { Avatar, Button } from '../components/ui'
+import { LogOutIcon } from '../components/ui/icons'
+import { resolveMediaUrl } from '../api/media'
 import { useLogout } from '../features/auth/hooks'
 import { Feed } from '../features/feed/Feed'
 import { useAuthStore } from '../stores/auth-store'
@@ -15,24 +17,25 @@ export function Home() {
 
   return (
     <div>
-      <header className="flex items-center justify-between border-b border-border px-4 py-4">
-        <div>
-          <h1>Twitter Smart Clone</h1>
-          {user ? (
-            <Link
-              to={`/profile/${user.username}`}
-              className="text-sm text-muted hover:text-foreground hover:underline"
-            >
-              Signed in as @{user.username}
-            </Link>
-          ) : null}
-        </div>
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-canvas/80 px-4 py-3 backdrop-blur-md">
+        {user ? (
+          <Link
+            to={`/profile/${user.username}`}
+            className="flex min-w-0 items-center gap-2.5 text-sm text-muted hover:text-foreground"
+          >
+            <Avatar name={user.name} src={resolveMediaUrl(user.avatar_key)} size="sm" />
+            <span className="truncate hover:underline">Signed in as @{user.username}</span>
+          </Link>
+        ) : (
+          <span />
+        )}
         <Button
           variant="outline"
           size="sm"
           loading={logout.isPending}
           onClick={() => logout.mutate()}
         >
+          <LogOutIcon className="size-4" />
           Log out
         </Button>
       </header>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Button, EmptyState, ErrorState } from '../../components/ui'
+import { RefreshIcon } from '../../components/ui/icons'
 import { TweetCard, TweetCardSkeleton } from '../../components/tweet/TweetCard'
 import { TweetComposer } from '../tweets/TweetComposer'
 import { describeTweetsError, useFeed, useRefreshFeed } from '../tweets/hooks'
@@ -90,19 +91,20 @@ export function Feed() {
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between border-b border-border px-4 py-2">
-        <h2 className="text-sm font-semibold text-muted">Home</h2>
+      <TweetComposer prependToFeed placeholder="What's happening?" />
+
+      <div className="flex items-center justify-between px-4 py-2">
+        <p className="text-sm font-semibold text-muted">Recent tweets</p>
         <Button
           variant="ghost"
           size="sm"
           loading={refresh.isPending}
           onClick={() => refresh.mutate()}
         >
+          <RefreshIcon className="size-4" />
           Refresh
         </Button>
       </div>
-
-      <TweetComposer prependToFeed placeholder="What's happening?" />
 
       {feed.isLoading ? (
         <>

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { useToast } from '../../components/ui'
+import { useToast, HeartIcon } from '../../components/ui'
 import { describeTweetsError, useLikeMutation } from './hooks'
 import type { TweetView } from '../../api/types'
 
@@ -62,7 +62,7 @@ export function LikeButton({ tweet }: LikeButtonProps) {
       aria-pressed={tweet.liked_by_viewer}
       aria-label={`${tweet.liked_by_viewer ? 'Liked' : 'Like'}, ${tweet.like_count} likes`}
       onClick={handleClick}
-      className={`flex cursor-pointer items-center gap-1 rounded-full px-2 py-1 transition-colors duration-150 hover:bg-danger/10 hover:text-danger motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-70 ${
+      className={`flex cursor-pointer items-center gap-1.5 rounded-full px-2 py-1.5 transition-colors duration-150 hover:bg-danger/10 hover:text-danger motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-70 ${
         tweet.liked_by_viewer ? 'text-danger' : ''
       }`}
     >
@@ -73,7 +73,7 @@ export function LikeButton({ tweet }: LikeButtonProps) {
           pop ? 'inline-block animate-like-pop motion-reduce:animate-none' : 'inline-block'
         }
       >
-        {tweet.liked_by_viewer ? '❤' : '♡'}
+        <HeartIcon filled={tweet.liked_by_viewer} className="size-[18px]" />
       </span>
       <span aria-hidden="true">{tweet.like_count}</span>
     </button>

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
-import { useToast } from '../components/ui'
+import { Logomark, useToast } from '../components/ui'
 import { RegisterForm } from '../features/auth/RegisterForm'
 
 /** Registration screen. On success, routes to login with the email
@@ -16,15 +16,22 @@ export function Register() {
   }
 
   return (
-    <div className="mx-auto flex max-w-sm flex-col gap-6 px-4 py-10">
-      <header>
-        <h1>Create your account</h1>
-        <p className="mt-1 text-sm text-muted">Join the conversation.</p>
-      </header>
-      <RegisterForm onSuccess={handleSuccess} />
-      <p className="text-sm text-muted">
-        Already have an account? <Link to="/login">Log in</Link>
-      </p>
+    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4 py-10 sm:min-h-screen">
+      <div className="w-full max-w-sm rounded-card border border-border bg-surface/60 p-8 shadow-card">
+        <header className="flex flex-col items-center gap-3 text-center">
+          <Logomark className="size-11" />
+          <div>
+            <h1>Create your account</h1>
+            <p className="mt-1 text-sm text-muted">Join the conversation.</p>
+          </div>
+        </header>
+        <div className="mt-6">
+          <RegisterForm onSuccess={handleSuccess} />
+        </div>
+        <p className="mt-6 text-center text-sm text-muted">
+          Already have an account? <Link to="/login">Log in</Link>
+        </p>
+      </div>
     </div>
   )
 }

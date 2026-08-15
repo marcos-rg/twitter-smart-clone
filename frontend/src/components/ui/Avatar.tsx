@@ -7,6 +7,7 @@ export interface AvatarProps {
   name: string
   src?: string
   size?: AvatarSize
+  className?: string
 }
 
 const sizeClasses: Record<AvatarSize, string> = {
@@ -28,13 +29,13 @@ function initials(name: string): string {
  * Round user avatar. Falls back to the user's initials when no image is
  * provided or the image fails to load, so it never renders a broken image.
  */
-export function Avatar({ name, src, size = 'md' }: AvatarProps) {
+export function Avatar({ name, src, size = 'md', className = '' }: AvatarProps) {
   const [failed, setFailed] = useState(false)
   const showImage = Boolean(src) && !failed
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-soft font-semibold text-brand ${sizeClasses[size]}`}
+      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand/25 to-accent/25 font-semibold text-brand ${sizeClasses[size]} ${className}`}
     >
       {showImage ? (
         <img

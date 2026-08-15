@@ -12,12 +12,14 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-brand text-white hover:bg-brand-hover disabled:hover:bg-brand',
+  primary:
+    'bg-brand text-white shadow-[0_1px_0_0_rgb(255_255_255/0.15)_inset,0_4px_14px_-4px_rgb(29_155_240/0.55)] hover:bg-brand-hover disabled:hover:bg-brand',
   secondary: 'bg-foreground text-canvas hover:bg-foreground/90 disabled:hover:bg-foreground',
   outline:
-    'border border-border bg-transparent text-foreground hover:bg-surface-hover disabled:hover:bg-transparent',
+    'border border-border-strong bg-transparent text-foreground hover:border-border-strong hover:bg-surface-hover disabled:hover:bg-transparent',
   ghost: 'bg-transparent text-brand hover:bg-brand-soft disabled:hover:bg-transparent',
-  danger: 'bg-danger text-white hover:bg-danger-hover disabled:hover:bg-danger',
+  danger:
+    'bg-danger text-white shadow-[0_1px_0_0_rgb(255_255_255/0.15)_inset,0_4px_14px_-4px_rgb(244_33_46/0.55)] hover:bg-danger-hover disabled:hover:bg-danger',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -65,8 +67,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={isDisabled}
       aria-busy={loading || undefined}
       className={[
-        'inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-semibold transition-colors duration-150 motion-reduce:transition-none',
-        'disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-semibold transition-[background-color,box-shadow,transform] duration-150 motion-reduce:transition-none',
+        'active:scale-[0.97] motion-reduce:active:scale-100',
+        'disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100',
         variantClasses[variant],
         sizeClasses[size],
         className,
