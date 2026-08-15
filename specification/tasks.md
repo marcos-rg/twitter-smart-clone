@@ -46,8 +46,8 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 29 |
-| In Progress | 1 |
+| Done | 30 |
+| In Progress | 0 |
 | To Do | 11 |
 
 The counts above reflect the repository at the time this plan was created: requirements
@@ -776,7 +776,7 @@ human-review cadence is:
 <a id="tsc-notif-002"></a>
 ### TSC-NOTIF-002 - Implement realtime notifications interface
 
-- **Status:** In Progress
+- **Status:** Done
 - **Objective / scope:** Build the notification panel/page, unread badge, authenticated
   WebSocket client, reconnect/backoff/heartbeat behavior, de-duplication, and cache updates.
 - **Dependencies:** [TSC-NOTIF-001](#tsc-notif-001),
