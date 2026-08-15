@@ -43,33 +43,50 @@ export function ProfileHeader({
   isFollowing,
 }: ProfileHeaderProps) {
   return (
-    <header className="flex flex-col gap-4 border-b border-border px-4 py-6">
-      <div className="flex items-start justify-between gap-4">
-        <Avatar name={name} src={resolveMediaUrl(avatarKey)} size="lg" />
-        {isOwnProfile ? (
-          <Button variant="outline" size="sm" onClick={onEdit}>
-            Edit profile
-          </Button>
-        ) : (
-          <FollowButton username={username} isFollowing={isFollowing} isOwnProfile={isOwnProfile} />
-        )}
+    <header className="flex flex-col border-b border-border">
+      <div
+        aria-hidden="true"
+        className="h-24 bg-gradient-to-br from-brand/25 via-accent/15 to-transparent sm:h-32"
+      />
+      <div className="flex flex-col gap-4 px-4 pb-6">
+        <div className="flex items-end justify-between gap-4">
+          <Avatar
+            name={name}
+            src={resolveMediaUrl(avatarKey)}
+            size="lg"
+            className="-mt-10 ring-4 ring-canvas"
+          />
+          <div className="pb-1">
+            {isOwnProfile ? (
+              <Button variant="outline" size="sm" onClick={onEdit}>
+                Edit profile
+              </Button>
+            ) : (
+              <FollowButton
+                username={username}
+                isFollowing={isFollowing}
+                isOwnProfile={isOwnProfile}
+              />
+            )}
+          </div>
+        </div>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-bold text-foreground">{name}</h1>
+          <p className="text-sm text-muted">@{username}</p>
+        </div>
+        {bio ? <p className="whitespace-pre-wrap break-words text-foreground">{bio}</p> : null}
+        <div className="flex gap-4 text-sm">
+          <Link to={`/profile/${username}/following`} className="hover:underline">
+            <span className="font-semibold text-foreground">{followingCount}</span>{' '}
+            <span className="text-muted">Following</span>
+          </Link>
+          <Link to={`/profile/${username}/followers`} className="hover:underline">
+            <span className="font-semibold text-foreground">{followersCount}</span>{' '}
+            <span className="text-muted">{followersCount === 1 ? 'Follower' : 'Followers'}</span>
+          </Link>
+        </div>
+        <p className="text-sm text-muted">Joined {formatJoinedDate(createdAt)}</p>
       </div>
-      <div className="min-w-0">
-        <h1 className="truncate text-xl font-bold text-foreground">{name}</h1>
-        <p className="text-sm text-muted">@{username}</p>
-      </div>
-      {bio ? <p className="whitespace-pre-wrap break-words text-foreground">{bio}</p> : null}
-      <div className="flex gap-4 text-sm">
-        <Link to={`/profile/${username}/following`} className="hover:underline">
-          <span className="font-semibold text-foreground">{followingCount}</span>{' '}
-          <span className="text-muted">Following</span>
-        </Link>
-        <Link to={`/profile/${username}/followers`} className="hover:underline">
-          <span className="font-semibold text-foreground">{followersCount}</span>{' '}
-          <span className="text-muted">{followersCount === 1 ? 'Follower' : 'Followers'}</span>
-        </Link>
-      </div>
-      <p className="text-sm text-muted">Joined {formatJoinedDate(createdAt)}</p>
     </header>
   )
 }
