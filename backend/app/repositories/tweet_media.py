@@ -18,8 +18,7 @@ class TweetMediaRepository(BaseRepository[TweetMedia]):
     async def list_for_tweet(self, tweet_id: UUID) -> list[TweetMedia]:
         """Every attachment for `tweet_id`, in display order."""
         result = await self.session.exec(
-            select(TweetMedia)
-            .where(TweetMedia.tweet_id == tweet_id)
+            select(TweetMedia).where(TweetMedia.tweet_id == tweet_id)
             # `.position` is typed as plain `int` at class scope (no
             # SQLModel-aware mypy plugin), so `.asc()` (a `ColumnElement`
             # method) doesn't type-check even though it works at runtime.

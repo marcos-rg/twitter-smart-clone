@@ -1,5 +1,4 @@
-"""Schema for `POST`/`DELETE /tweets/{id}/like` (spec §6.1, §6.3 "Likes").
-"""
+"""Schema for `POST`/`DELETE /tweets/{id}/like` (spec §6.1, §6.3 "Likes")."""
 
 from __future__ import annotations
 

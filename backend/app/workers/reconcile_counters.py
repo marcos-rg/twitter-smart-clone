@@ -36,8 +36,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from app.core.config import Settings, get_settings
 from app.workers.celery_app import celery_app
 
-_RECONCILE_LIKE_COUNT_SQL = text(
-    """
+_RECONCILE_LIKE_COUNT_SQL = text("""
     UPDATE tweets t
     SET like_count = sub.actual_count
     FROM (
@@ -49,11 +48,9 @@ _RECONCILE_LIKE_COUNT_SQL = text(
     ) sub
     WHERE t.id = sub.tweet_id AND t.like_count <> sub.actual_count
     RETURNING t.id
-    """
-)
+    """)
 
-_RECONCILE_REPLY_COUNT_SQL = text(
-    """
+_RECONCILE_REPLY_COUNT_SQL = text("""
     UPDATE tweets t
     SET reply_count = sub.actual_count
     FROM (
@@ -68,8 +65,7 @@ _RECONCILE_REPLY_COUNT_SQL = text(
     ) sub
     WHERE t.id = sub.tweet_id AND t.reply_count <> sub.actual_count
     RETURNING t.id
-    """
-)
+    """)
 
 
 @dataclass(frozen=True)
