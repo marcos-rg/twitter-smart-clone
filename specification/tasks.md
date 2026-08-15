@@ -46,9 +46,9 @@ and the relevant living documentation in the same pull request.
 
 | Status | Count |
 |---|---:|
-| Done | 28 |
-| In Progress | 0 |
-| To Do | 13 |
+| Done | 29 |
+| In Progress | 1 |
+| To Do | 11 |
 
 The counts above reflect the repository at the time this plan was created: requirements
 and a draft specification exist, but scope sign-off and application implementation are
@@ -750,7 +750,7 @@ human-review cadence is:
 <a id="tsc-like-003"></a>
 ### TSC-LIKE-003 - Verify likes end to end
 
-- **Status:** To Do
+- **Status:** Done
 - **Objective / scope:** Prove likes, counters, optimistic behavior, persistence, and live/
   offline notifications work together.
 - **Dependencies:** [TSC-LIKE-001](#tsc-like-001),
@@ -776,7 +776,7 @@ human-review cadence is:
 <a id="tsc-notif-002"></a>
 ### TSC-NOTIF-002 - Implement realtime notifications interface
 
-- **Status:** To Do
+- **Status:** In Progress
 - **Objective / scope:** Build the notification panel/page, unread badge, authenticated
   WebSocket client, reconnect/backoff/heartbeat behavior, de-duplication, and cache updates.
 - **Dependencies:** [TSC-NOTIF-001](#tsc-notif-001),
