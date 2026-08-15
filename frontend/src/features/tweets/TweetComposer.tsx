@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
-import { Button, Textarea, useToast } from '../../components/ui'
+import { Avatar, Button, Textarea, useToast } from '../../components/ui'
+import { resolveMediaUrl } from '../../api/media'
+import { useAuthStore } from '../../stores/auth-store'
 import { ImageUploader } from '../media/ImageUploader'
 import type { MediaUploadAdapter, UploadItem } from '../media/types'
 import { describeTweetsError, useCreateTweet } from './hooks'
@@ -60,6 +62,7 @@ export function TweetComposer({
   const [uploaderResetKey, setUploaderResetKey] = useState(0)
   const { toast } = useToast()
   const mutation = useCreateTweet({ profileUsername, prependToFeed })
+  const user = useAuthStore((state) => state.user)
 
   const isReply = Boolean(parentTweetId)
   const trimmedLength = strippedLength(content)
@@ -100,36 +103,49 @@ export function TweetComposer({
     <form
       onSubmit={(event) => void handleSubmit(event)}
       aria-label={isReply ? 'Reply composer' : 'Tweet composer'}
-      className="flex flex-col gap-3 border-b border-border px-4 py-3"
+      className="flex gap-3 border-b border-border px-4 py-4"
     >
-      <Textarea
-        label={isReply ? 'Post your reply' : "What's happening?"}
-        value={content}
-        onChange={(event) => setContent(event.target.value)}
-        placeholder={placeholder ?? (isReply ? 'Post your reply' : "What's happening?")}
-        rows={3}
-        error={
-          overLimit ? `${trimmedLength - CONTENT_MAX_LENGTH} characters over the limit.` : undefined
-        }
-      />
+      {/* Decorative: the signed-in user's identity is already established
+          elsewhere on every screen that renders this composer (profile
+          header, "Signed in as" link), so this avatar is hidden from the
+          accessibility tree rather than exposing a second same-named image. */}
+      <span aria-hidden="true">
+        <Avatar name={user?.name ?? 'You'} src={resolveMediaUrl(user?.avatar_key)} />
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <Textarea
+          label={isReply ? 'Post your reply' : "What's happening?"}
+          hideLabel
+          value={content}
+          onChange={(event) => setContent(event.target.value)}
+          placeholder={placeholder ?? (isReply ? 'Post your reply' : "What's happening?")}
+          rows={2}
+          className="border-transparent bg-transparent px-0 py-1 text-lg shadow-none placeholder:text-muted focus:border-transparent"
+          error={
+            overLimit
+              ? `${trimmedLength - CONTENT_MAX_LENGTH} characters over the limit.`
+              : undefined
+          }
+        />
 
-      <ImageUploader
-        key={uploaderResetKey}
-        label="Add images to your tweet"
-        purpose="tweet_image"
-        maxFiles={4}
-        adapter={imageUploadAdapter}
-        onConfirmedKeysChange={setMediaKeys}
-        onItemsChange={setUploadItems}
-      />
+        <ImageUploader
+          key={uploaderResetKey}
+          label="Add images to your tweet"
+          purpose="tweet_image"
+          maxFiles={4}
+          adapter={imageUploadAdapter}
+          onConfirmedKeysChange={setMediaKeys}
+          onItemsChange={setUploadItems}
+        />
 
-      <div className="flex items-center justify-between gap-3">
-        <span aria-live="polite" className={`text-sm ${counterClass}`}>
-          {trimmedLength} / {CONTENT_MAX_LENGTH}
-        </span>
-        <Button type="submit" loading={mutation.isPending} disabled={!canSubmit}>
-          {isReply ? 'Reply' : 'Post'}
-        </Button>
+        <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+          <span aria-live="polite" className={`text-sm ${counterClass}`}>
+            {trimmedLength} / {CONTENT_MAX_LENGTH}
+          </span>
+          <Button type="submit" loading={mutation.isPending} disabled={!canSubmit}>
+            {isReply ? 'Reply' : 'Post'}
+          </Button>
+        </div>
       </div>
     </form>
   )
